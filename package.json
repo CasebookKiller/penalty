@@ -1,9 +1,9 @@
 {
-  "name": "reactjs-template",
+  "name": "penalty",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.1",
   "type": "module",
-  "homepage": "https://casebookkiller.github.io/reactjs-template",
+  "homepage": "https://casebookkiller.github.io/penalty",
   "scripts": {
     "deploy": "gh-pages -d dist",
     "dev": "vite",

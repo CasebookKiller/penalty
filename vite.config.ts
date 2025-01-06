@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react-swc';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/reactjs-template',
+  base: '/penalty/',
   plugins: [
     // Позволяет использовать React dev server наряду с созданием приложения React с помощью Vite.
     // https://npmjs.com/package/@vitejs/plugin-react-swc

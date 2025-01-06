@@ -38,7 +38,7 @@ const Inner: FC = () => {
   useEffect(() => {
     if (debug) {
       console.log('Режим отладки включен');
-      import('eruda').then((lib) => lib.default.init());
+      //import('eruda').then((lib) => lib.default.init());
     }
   }, [debug]);
 
