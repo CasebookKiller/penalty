@@ -3,13 +3,12 @@ import {
   popup,
   mainButton,
   backButton,
-  useLaunchParams,
+//  useLaunchParams,
   miniApp,
   themeParams,
   viewport,
   init,
 } from '@telegram-apps/sdk-react';
-import { AppRoot } from '@telegram-apps/telegram-ui';
 import { type FC,
   startTransition,
   useEffect,
@@ -24,7 +23,9 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
-import { routes } from '@/navigation/routes.tsx';
+import { Route as AppRoute,routes } from '@/navigation/routes.tsx';
+import { PenaltyPage } from '@/pages/PenaltyPage/PenaltyPage';
+import { GK395Page } from '@/pages/GK395Page/GK395Page';
 
 function BackButtonManipulator() {
   const location = useLocation();
@@ -48,6 +49,7 @@ function BackButtonManipulator() {
     }
   }, [location]);
 
+  
   return null;
 }
 
@@ -115,7 +117,7 @@ function MainButtonManipulator() {
 
 export const App: FC = () => {
   init();
-  const lp = useLaunchParams();
+  //const lp = useLaunchParams();
   
   miniApp.mount();
   
@@ -130,11 +132,14 @@ export const App: FC = () => {
     console.log('%cminiApp: %o', `color: cyan`, miniApp);
   });
 
+  const penalty: AppRoute = { path: '/penalty', element: <PenaltyPage/>, title: 'Расчёт неустойки' };
+  const gk395: AppRoute = { path: '/gk395', element: <GK395Page/>, title: 'Расчёт процентов по ст.395 ГК РФ' };
+  
+  routes.push(penalty, gk395);
+
+
   return (
-    <AppRoot
-      appearance={miniApp.isDark() ? 'dark' : 'light'}
-      platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
-    >
+    <>
       <HashRouter>
         <BackButtonManipulator/>
         <MainButtonManipulator/>
@@ -143,6 +148,6 @@ export const App: FC = () => {
           <Route path='*' element={<Navigate to='/'/>}/>
         </Routes>
       </HashRouter>
-    </AppRoot>
+    </>
   );
 };

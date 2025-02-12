@@ -1,6 +1,5 @@
 import { themeParams } from '@telegram-apps/sdk-react';
 import type { FC } from 'react';
-import { List } from '@telegram-apps/telegram-ui';
 
 import { DisplayData } from '@/components/DisplayData/DisplayData.tsx';
 
@@ -11,8 +10,9 @@ export const ThemeParamsPage: FC = () => {
   themeParams.mount();
 
   return (
-    <List>
+    <div>
       <DisplayData
+        header={'Параметры темы'}
         rows={
           Object
             .entries(themeParams.state())
@@ -24,6 +24,6 @@ export const ThemeParamsPage: FC = () => {
             }))
         }
       />
-    </List>
+    </div>
   );
 };

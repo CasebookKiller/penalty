@@ -1,0 +1,181 @@
+.p-component {
+  font-family: var(--font-family);
+  font-feature-settings: var(--font-feature-settings, normal);
+  font-size: 0.75rem;
+  font-weight: normal;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  text-align: left;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid #424b57;
+  border-width: 0 0 1px 0;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.87);
+  background: #1f2937;
+  transition: box-shadow 0.2s;
+}
+
+.p-datatable.p-datatable-sm .p-datatable-tbody > tr > td {
+  padding: 0.25rem 0.25rem;
+}
+
+.p-inputtext {
+  font-family: var(--font-family);
+  font-feature-settings: var(--font-feature-settings, normal);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.87);
+  background: var(--tg-theme-section-bg-color);
+  padding: 0.5rem 0.5rem;
+  border: 1px solid var(--tg-theme-hint-color);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  border-radius: 6px;
+  outline-color: transparent;
+}
+
+.p-inputtext:enabled:hover {
+  border-color: var(--tg-theme-accent-text-color);
+}
+
+.p-inputtext:enabled:focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: 0 0 0 0.2rem rgba(34, 211, 238, 0.2);
+  border-color: var(--tg-theme-accent-text-color);
+}
+
+.p-selectbutton .p-button.p-highlight {
+  background: var(--tg-theme-accent-text-color);
+  border-color: var(--tg-theme-accent-text-color);
+  color: var(--tg-theme-section-bg-color);
+}
+
+
+.p-button:focus {
+  box-shadow: 0 0 0 2px var(--tg-theme-section-bg-color), 0 0 0 4px var(--tg-theme-accent-text-color), 0 1px 2px 0 var(--tg-theme-section-bg-color);
+}
+
+#sum > .p-inputnumber-input {
+  border-radius: 6px 0px 0px 6px ;
+}
+
+#currency.p-button-group .p-button:first-of-type {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#currency > .p-component {
+  font-family: var(--font-family);
+  font-feature-settings: var(--font-feature-settings, normal);
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+.p-datepicker table td.p-datepicker-today > span {
+  background: transparent;
+  color: var(--tg-theme-accent-text-color);
+  border-color: transparent;
+}
+
+.p-datepicker .p-datepicker-header .p-datepicker-title .p-datepicker-year:enabled:hover, .p-datepicker .p-datepicker-header .p-datepicker-title .p-datepicker-month:enabled:hover {
+  color: var(--tg-theme-accent-text-color);
+}
+
+.p-datepicker table td > span.p-highlight {
+  color: rgba(255, 255, 255, 0.87);
+  background: var(--tg-theme-accent-text-color);
+}
+
+#datefrom > .p-inputtext, #dateto > .p-inputtext {
+  border-radius: 6px 0px 0px 6px!important;
+}
+
+#datefrom > .p-button, #dateto > .p-button {
+  color: var(--tg-theme-section-bg-color);
+  background: var(--tg-theme-accent-text-color);
+  border: 1px solid var(--tg-theme-accent-text-color);
+  font-size: 1rem;
+  border-radius: 0px 6px 6px 0px;
+}
+
+#datefrom > .p-button.p-button-icon-only, #dateto > .p-button.p-button-icon-only {
+  width: 2.5rem;
+  padding: 0.75rem 0;
+}
+
+
+.debt > .p-inputtext, #dateto > .p-inputtext {
+  border-radius: 6px 0px 0px 6px!important;
+}
+
+.debt > .p-button {
+  color: var(--tg-theme-section-bg-color);
+  background: var(--tg-theme-accent-text-color);
+  border: 1px solid var(--tg-theme-accent-text-color);
+  font-size: 1rem;
+  border-radius: 0px 6px 6px 0px;
+}
+
+.debt > .p-button.p-button-icon-only {
+  width: 2.5rem;
+  padding: 0.75rem 0;
+}
+
+td.debtid {
+  text-align: center;
+}
+
+td.debtsum > div > .p-inputnumber {
+  height: 46px;
+}
+
+/*
+td.debtsum > div > .p-button {
+  margin-left: 4px;
+  height: 46px;
+  width: 24px;
+}
+*/
+
+.debttrash {
+  margin-left: 4px;
+  height: 46px;
+  width: 12px;
+  text-align: center;
+}
+
+.debttrash {
+  color: var(--tg-theme-accent-text-color);
+  background: var(--tg-theme-section-bg-color);
+  border: 1px solid var(--tg-theme-accent-text-color);
+  padding: 0.25rem 1rem;
+  font-size: 1rem;
+}
+
+.debttrash.p-button {
+  border-radius: 6px 6px 6px 6px;
+}
+
+td[data-pc-name="datatable"] { 
+  height: 46px;
+  text-align: center; 
+}
+
+.debtplus {
+  color: var(--tg-theme-section-bg-color);
+  background: var(--tg-theme-accent-text-color);
+  border: 1px solid var(--tg-theme-accent-text-color);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.numberOfDays {
+  max-width: 64px;
+}
+
+.numberOfDays > .p-inputtext {
+  text-align: center;
+}

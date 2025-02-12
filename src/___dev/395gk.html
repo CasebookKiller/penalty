@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <meta name="description" content="Калькулятор для расчета процентов по ст. 395 ГК РФ"/>
+        <meta name="keywords" content="статья 395 ГК РФ, расчет процентов по ст. 395 ГК РФ, статья 395 ГК РФ новые правила"/>
+        <meta name="verify-admitad" content="654b3bd281"/>
+        <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+        <link rel="canonical" href="https://395gk.ru"/>
+        <span id='iiframe'></span>
+        <script>
+
+            function svedeniya() {
+                sdata = window.frames[0].sdata
+                sprocent = window.frames[0].sprocent
+                pdata = window.frames[0].pdata
+                window.procent = window.frames[0].procent
+
+                window.pdata = pdata.concat(sdata)
+                for (let i = 0; i < 9; i++) {
+                    window.procent[0][i] = window.procent[0][i].concat(sprocent)
+                }
+                for (let i = 1; i < 3; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        for (let k = procent[i][j].length; k < procent[0][8].length; k++) {
+                            window.procent[i][j].push(window.procent[i][j][k - 1])
+                        }
+                    }
+                }
+
+                if (location.hash != '' && location.hash.indexOf("#d") != -1)
+                    link2code()
+            }
+            fedokrug = ['Центральный', 'Северо-Западный', 'Южный', 'Северо-Кавказский', 'Приволжский', 'Уральский', 'Сибирский', 'Дальневосточный', 'Крымский']
+            fedokrugweb = ['cfo', 'szfo', 'yfo', 'skfo', 'pfo', 'ufo', 'sfo', 'dfo', 'kfo']
+            dn = ["дней", "день", "дня", "дня", "дня", "дней", "дней", "дней", "дней", "дней"]
+            valuta = ["руб.", "$", "евро"]
+            pdni = []
+            itog = []
+            rregvalue = ''
+            kkod = 1
+            //чтобы не делил на ноль при вводе делителя
+            eff = 0
+            d = document
+            curr = 0
+        </script>
+        <link rel='stylesheet' href='css4-5.css' type='text/css'>
+        <title>Калькулятор процентов по ст.395 ГК РФ (новые правила)</title>
+        <script type='text/javascript' src='holiweek1-6.js'></script>
+        <script type='text/javascript' src='calendar5-4-7.js'></script>
+        <script type='text/javascript' src='calculator8-3-3.js'></script>
+        <style>
+            .warnfon {
+                border-color: red !important;
+                border-width: 2px !important;
+                margin: 0 !important;
+                border-radius: 2px;
+            }
+
+            .outofperiod {
+                background-color: #DAEEF6;
+                /* #EBF5F9 */
+                border: 1px;
+                padding-block: 1px; padding-inline: 2px; border-width: 1px;
+                border-style: inset;
+                border-color: rgb(118, 118, 118);
+                /*-internal-light-dark */
+                border-spacing: 2px;
+                border-radius: 2px;
+                margin: 0.8px;
+            }
+
+            /* #C9E2ED */
+            .llink:focus {
+                color: #0066cc !important;
+            }
+        </style>
+        <input id=hiddenusersprocent type=hidden value=0>
+        <!--LiveInternet counter-->
+        <script type="text/javascript">
+            <!--
+            new Image().src = "//counter.yadro.ru/hit?r" + escape(document.referrer) + ((typeof (screen) == "undefined") ? "" : ";s" + screen.width + "*" + screen.height + "*" + (screen.colorDepth ? screen.colorDepth : screen.pixelDepth)) + ";u" + escape(document.URL) + ";" + Math.random();
+            hit = 60
+            //-->
+        </script>
+        <!--/LiveInternet-->
+        <!-- Yandex.RTB -->
+        <script>
+            window.yaContextCb = window.yaContextCb || []
+        </script>
+        <script src="https://yandex.ru/ads/system/context.js" async></script>
+        <!--/ Yandex.RTB -->
+    </head>
+    <body>
+        <div class='noprint2'>
+            <a name=top>
+                <h1>Калькулятор для расчета процентов по ст. 395 ГК РФ</h1>
+            </a>
+            <table cellpadding=3px>
+                <tr>
+                    <td>
+                        <a href=https://395gk.ru target=_blank class=llink>
+                            <sup>
+                                <img src=img/395calc.png width=55px title="Калькулятор для расчета процентов за пользование чужими денежными средствами (ст.395 Гражданского кодекса РФ)">
+                            </sup>
+                        </a>
+                    </td>
+                    <td>
+                        <span class=explain>
+                            <font color=#9b2d30>
+                                <b>16.12.2024 было большое обновление. Если калькулятор не работает, нужно один раз обновить страницу</b>
+                            </font>
+                            <br>
+                            <span class=explain>
+                                Калькулятор актуален в т.ч. в 2025 году: учтены последние <a href=svedcb.htm class=llink target=_blank title="Процентные ставки для целей применения ст. 395 ГК РФ">процентные ставки</a>
+                                .
+			<br>
+                                С 28.10.2024 ключевая ставка - <strong>21%</strong>
+                                . Учтено <a href=ppvs24-03-2016n7.htm class=llink target=_blank title="О применении судами некоторых положений ГК РФ об ответственности за нарушение обязательств">Постановление Пленума Верховного Суда РФ от 24.03.2016 № 7</a>
+                                .
+			<br>
+                                Учтены общероссийские праздничные и выходные дни (в т.ч. на 2025 год). Учтён "мораторий на банкротство".
+			<br>
+                                <!--<font color=red>Внимание!</font> -->
+                                Учтены все редакции <a href=st395gk.htm class=llink target=_blank>статьи 395 ГК РФ</a>
+                                , в т.ч. новая (с 01.08.2016 расчет по ключевой ставке ЦБ РФ).
+			<br>
+                                <!--<sup><font color=red><b>новое</b></font></sup> -->
+                                см. также 
+                                <!--<span style="background-color:#cfffb3">-->
+                                <a href=https://395gk.ru/gp/ class=llink target=_blank title='Калькулятор госпошлины в суд по новым правилам с 09.09.2024 (ГПК РФ, АПК РФ)'>Калькулятор госпошлины в суд по новым правилам (с 09.09.2024)</a>
+                                <!--</span>-->
+                                <br>
+                                см. также <a href=https://395gk.ru/ind/ class=llink target=_blank title='Калькулятор индексации присужденных денежных сумм по правилам ст.208 ГПК РФ, ст.183 АПК РФ'>Калькулятор индексации присужденных сумм (ст.208 ГПК РФ, ст.183 АПК РФ)</a>
+                            </span>
+                    </td>
+                </tr>
+            </table>
+            <span style="font-size:8px">
+                <br>
+            </span>
+            <table id='ttable' class='entertable' style='background-color:#f0f0f0; border: 1px solid #a0a0a0'>
+                <tr>
+                    <td>Сумма задолженности:</td>
+                    <td colspan=2>
+                        <input type=text id='ddolg' value='' onClick=beg() onkeyup=beg() onBlur='this.value=human(punk(this.value))' autocomplete=off size=15>
+                        <select id='currency' onChange='beg()'>
+                            <option value=0 selected>рублей
+            	
+                            <option value=1>долларов США
+            	
+                            <option value=2>евро
+            
+                        </select>
+                        <input type="checkbox" id="tip1" class="tip-checkbox">
+                        <label for="tip1" class="support">
+                            <em>
+                                <abbr title='Укажите сумму долга вместе с НДС, если сумма долга облагается НДС'>?</abbr>
+                            </em>
+                        </label>
+                        <span class='tip-block'>
+                            <span class="tip">
+                                Укажите сумму долга вместе с НДС, если сумма долга облагается НДС<label for="tip1" class="tip-close">X</label>
+                            </span>
+                        </span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class=notice>
+                            <a onClick="importIzTabl('divimportfromlink');" class=llink title='импорт данных для заполнения калькулятора из ссылки на расчет&#013;(актуально для ссылок длиннее 2700-3000 символов и для некоторых повреждённых ссылок)'>Импорт из ссылки</a>
+                        </span>
+                    </td>
+                </tr>
+                <tr border=1>
+                    <td valign=top class=dot>Период расчета:</td>
+                    <td class=dot width=1px colspan=2>
+                        <input type=text id='ffirstdate' value='' onClick='checkdate(this);beg()' onkeyup='checkdate(this);beg()' class='date' placeholder='дд.мм.гггг' size=15 autocomplete=off>
+                        <input type=text id='sseconddate' value='' onClick='checkdate(this);beg()' onkeyup='checkdate(this);beg()' class='date' placeholder='дд.мм.гггг' size=15 autocomplete=off>
+                        <span id='kkolvo'></span>
+                        <span class=warn id='warntop'></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td colspan=2>
+                        <span class=notice>Начало периода</span>
+                        &nbsp;
+                        <sup>
+                            <input type="checkbox" id="tip2" class="tip-checkbox">
+                            <label for="tip2" class="support">
+                                <em>
+                                    <abbr title='Cледующий день после крайнего срока для оплаты / возврата средств (ст. 191 ГК РФ)'>?</abbr>
+                                </em>
+                            </label>
+                            <span class='tip-block'>
+                                <span class="tip">
+                                    Cледующий день после крайнего срока для оплаты / возврата средств (<a href=st191gk.htm class=llink target=_blank title="ст. 191 ГК РФ. Начало срока, определенного периодом времени">ст. 191 ГК РФ</a>
+                                    )<label for="tip2" class="tip-close">X</label>
+                                </span>
+                            </span>
+                        </sup>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=notice>Конец периода расчета</span>
+                        &nbsp;
+                        <sup>
+                            <input type="checkbox" id="tip3" class="tip-checkbox">
+                            <label for="tip3" class="support">
+                                <em>
+                                    <abbr title='День фактического погашения долга либо иная дата, на которую рассчитываются проценты. Указывается для всего расчета (с учетом увеличений долга и(или) оплат), а не для одной вышеуказанной задолженности.'>?</abbr>
+                                </em>
+                            </label>
+                            <span class='tip-block'>
+                                <span class="tip">
+                                    День фактического погашения долга либо иная дата, на которую рассчитываются проценты.<br>
+                                    Указывается для всего расчета (с учетом увеличений долга и(или) оплат), а не для одной вышеуказанной задолженности.<label for="tip3" class="tip-close">X</label>
+                                </span>
+                            </span>
+                            <a class=llink onClick="segodnya();" title='Указать в качестве даты окончания расчета сегодняшнюю дату'>сегодня</a>
+                        </sup>
+                    </td>
+                </tr>
+                <tr id='regionmenu' style='display:none'>
+                    <td class=dot>Регион:</td>
+                    <td colspan=2 class=dot>
+                        <nobr>
+                            <select id='rregion' onChange='rregvalue=this.options[this.selectedIndex].text; setCookie("r",this.selectedIndex,"Thu, 26-Dec-2030 00:00:00 GMT","/"); beg()'>
+                                <option value=0 selected>г.Москва
+	
+                                <option value=1>г.Санкт-Петербург
+	
+                                <option value=6>Алтайский край
+	
+                                <option value=7>Амурская обл.
+	
+                                <option value=1>Архангельская обл.
+	
+                                <option value=2>Астраханская обл.
+	
+                                <option value=0>Белгородская обл.
+	
+                                <option value=0>Брянская обл.
+	
+                                <option value=0>Владимирская обл.
+	
+                                <option value=2>Волгоградская обл.
+	
+                                <option value=1>Вологодская обл.
+	
+                                <option value=0>Воронежская обл.
+	
+                                <option value=7>Еврейская авт.обл.
+	
+                                <option value=6>Забайкальский край
+	
+                                <option value=0>Ивановская обл.
+	
+                                <option value=6>Иркутская обл.
+	
+                                <option value=3>Кабардино-Балкарская Республика
+	
+                                <option value=1>Калининградская обл.
+	
+                                <option value=0>Калужская обл.
+	
+                                <option value=7>Камчатский край
+	
+                                <option value=3>Карачаево-Черкесская Республика
+	
+                                <option value=6>Кемеровская обл.
+	
+                                <option value=4>Кировская обл.
+	
+                                <option value=0>Костромская обл.
+	
+                                <option value=2>Краснодарский край
+	
+                                <option value=6>Красноярский край
+	
+                                <option value=5>Курганская обл.
+	
+                                <option value=0>Курская обл.
+	
+                                <option value=1>Ленинградская обл.
+	
+                                <option value=0>Липецкая обл.
+	
+                                <option value=7>Магаданская обл.
+	
+                                <option value=0>Московская обл.
+	
+                                <option value=1>Мурманская обл.
+	
+                                <option value=1>Ненецкий авт. округ
+	
+                                <option value=4>Нижегородская обл.
+	
+                                <option value=1>Новгородская обл.
+	
+                                <option value=6>Новосибирская обл.
+	
+                                <option value=6>Омская обл.
+	
+                                <option value=4>Оренбургская обл.
+	
+                                <option value=0>Орловская обл.
+	
+                                <option value=4>Пензенская обл.
+	
+                                <option value=4>Пермский край
+	
+                                <option value=1>Псковская обл.
+	
+                                <option value=7>Приморский край
+	
+                                <option value=2>Республика Адыгея (Адыгея)
+	
+                                <option value=6>Республика Алтай
+	
+                                <option value=4>Республика Башкортостан
+	
+                                <option value=6>Республика Бурятия
+	
+                                <option value=3>Республика Дагестан
+	
+                                <option value=3>Республика Ингушетия
+	
+                                <option value=2>Республика Калмыкия
+	
+                                <option value=1>Республика Карелия
+	
+                                <option value=1>Республика Коми
+	
+                                <option value=4>Республика Марий Эл
+	
+                                <option value=4>Республика Мордовия
+	
+                                <option value=7>Республика Саха (Якутия)
+	
+                                <option value=3>Республика Северная Осетия - Алания
+	
+                                <option value=4>Республика Татарстан (Татарстан)
+	
+                                <option value=6>Республика Тыва
+	
+                                <option value=6>Республика Хакасия
+	
+                                <option value=2>Ростовская обл.
+	
+                                <option value=0>Рязанская обл.
+	
+                                <option value=4>Самарская обл.
+	
+                                <option value=4>Саратовская обл.
+	
+                                <option value=7>Сахалинская обл.
+	
+                                <option value=5>Свердловская обл.
+	
+                                <option value=0>Смоленская обл.
+	
+                                <option value=3>Ставропольский край
+	
+                                <option value=0>Тамбовская обл.
+	
+                                <option value=0>Тверская обл.
+	
+                                <option value=6>Томская обл.
+	
+                                <option value=0>Тульская обл.
+	
+                                <option value=5>Тюменская обл.
+	
+                                <option value=4>Удмуртская Республика
+	
+                                <option value=4>Ульяновская обл.
+	
+                                <option value=7>Хабаровский край
+	
+                                <option value=5>Ханты-Мансийский авт.округ - Югра
+	
+                                <option value=5>Челябинская обл.
+	
+                                <option value=3>Чеченская Республика
+	
+                                <option value=4>Чувашская Республика
+	
+                                <option value=7>Чукотский авт.округ
+	
+                                <option value=5>Ямало-Ненецкий авт.округ
+	
+                                <option value=0>Ярославская обл.
+	
+                                <option value=8>Республика Крым
+	
+                                <option value=8>г.Севастополь
+	
+                                <option value=0>Центральный федеральный округ
+	
+                                <option value=1>Северо-Западный федеральный округ
+	
+                                <option value=2>Южный федеральный округ
+	
+                                <option value=3>Северо-Кавказский федеральный округ
+	
+                                <option value=4>Приволжский федеральный округ
+	
+                                <option value=5>Уральский федеральный округ
+	
+                                <option value=6>Сибирский федеральный округ
+	
+                                <option value=7>Дальневосточный федеральный округ
+	
+                                <option value=8>Крымский федеральный округ	
+
+                            </select>
+                            &nbsp;
+                            <span id='ffedokrug'>
+                                <a href=svedcb/cfo.htm class=llink title="Средние ставки банковского процента по вкладам физ.лиц" target=_blank>Центральный федеральный округ</a>
+                            </span>
+                        </nobr>
+                    </td>
+                </tr>
+                <tr id='regionmenu2' style='display:none'>
+                    <td></td>
+                    <td colspan=2>
+                        <span class=notice>Регион по месту жительства (месту нахождения) кредитора (истца)</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign=top class=dot>
+                        Оплата долга:
+			<input type="checkbox" id="tip7" class="tip-checkbox">
+                        <label for="tip7" class="support">
+                            <em>
+                                <abbr title='Суммы оплат следует вводить без знака минус'>
+                                    <noindex>?</noindex>
+                                </abbr>
+                            </em>
+                        </label>
+                        <span class='tip-block'>
+                            <span class="tip">
+                                Суммы оплат следует вводить без знака минус
+                                <label for="tip7" class="tip-close">
+                                    <noindex>X</noindex>
+                                </label>
+                            </span>
+                        </span>
+                    </td>
+                    <td colspan=2 class=dot>
+                        <nobr>
+                            <input type=text class=date placeholder='дд.мм.гггг' id=oplatadata0 onClick='checkdate(this);beg()' onkeyup='checkdate(this);beg()' size=10 autocomplete=off>
+                            &nbsp;&nbsp;на сумму <input type=text title='сумма оплаты' id=oplata0 onClick=beg() onkeyup=beg() onBlur='this.value=human(punk(this.value))' size=15 autocomplete=off>
+                            &nbsp;&nbsp;прим. <input type=text title='примечание' id=npd0 onClick=beg() onkeyup=beg() size=10 autocomplete=off>
+                            <input type=button value=' + ' title='добавить ниже строку для учета оплаты' onClick=oplataplus()>
+                            <input type=button value=" - " title="удалить данные об оплате" onClick="d.getElementById('oplatadata0').value=d.getElementById('oplata0').value=d.getElementById('npd0').value='';d.getElementById('oplatadata0').className='date';beg();">
+                            <span id=ooplata></span>
+                        </nobr>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td colspan=2>
+                        <span class=notice>
+                            <a class=llink onClick="importIzTabl('divImportOplat');">Импорт оплат из таблицы</a>
+                            &nbsp;&nbsp;(например, из Excel)
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign=top class=dot>Увеличение долга:</td>
+                    <td colspan=2 class=dot>
+                        <nobr>
+                            <input type=text class=date placeholder='дд.мм.гггг' id=dolgdata0 onClick='checkdate(this);beg()' onkeyup='checkdate(this);beg()' size=10 autocomplete=off>
+                            &nbsp;&nbsp;на сумму <input type=text title='сумма долга' id=dolg0 onClick=beg() onkeyup=beg() onBlur='this.value=human(punk(this.value))' size=15 autocomplete=off>
+                            &nbsp;&nbsp;прим. <input type=text title='примечание' id=dolgprim0 onClick=beg() onkeyup=beg() size=10 autocomplete=off>
+                            <input type=button value=' + ' title='добавить ниже строку для учета долга' onClick=dolgplus()>
+                            <input type=button value=" - " title="удалить данные о долге" onClick="d.getElementById('dolgdata0').value=d.getElementById('dolg0').value=d.getElementById('dolgprim0').value='';d.getElementById('dolgdata0').className='date';cleanwarn0();beg();">
+                            <span class=warn id=warn0></span>
+                            <span id=dopdolg></span>
+                        </nobr>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td colspan=2>
+                        <span class=notice>
+                            <a class=llink onClick="importIzTabl('divImportDolga');">Импорт долга из таблицы</a>
+                            &nbsp;&nbsp;(например, из Excel)
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class=dot>
+                        Период определять: 
+			<input type="checkbox" id="tip4" class="tip-checkbox">
+                        <label for="tip4" class="support">
+                            <em>
+                                <abbr title='Кликните для подсказки'>?</abbr>
+                            </em>
+                        </label>
+                        <span class='tip-block'>
+                            <span class="tip">
+                                С 24.03.2016 судебная практика однозначна - период просрочки определяется в календарных днях. Ранее практика была неоднозначной. Подробнее см. <a href=#faq3 class=llink>ответ на вопрос № 3</a>
+                                <label for="tip4" class="tip-close">X</label>
+                            </span>
+                        </span>
+                    </td>
+                    <td colspan=2 class=dot>
+                        <select id='effdni' onChange='beg()'>
+                            <option value=0 selected>в календарных днях
+				
+                            <option value=1>из расчета 30 дней в месяце (360 дней в году)
+			
+                        </select>
+                        &nbsp;
+                        <select id='divide360' onChange='beg()'>
+                            <option value=360>делить на 360
+				
+                            <option value=365 selected>делить на 365 (366)
+			
+                        </select>
+                        <!--<a href=#faq3>Что выбрать?</a>-->
+                    </td>
+                </tr>
+                <tr id='moratormenu' style='display:none'>
+                    <td class=dot>Мораторий 2022 г.:</td>
+                    <td colspan=2 class=dot>
+                        <input type=checkbox id='Moratoriy2022' onClick='beg()'>
+                        не начислять проценты с 01.04.2022 по 01.10.2022 
+	        <input type="checkbox" id="tip5" class="tip-checkbox">
+                        <label for="tip5" class="support">
+                            <em>
+                                <abbr title='С 01.04.2022 по 01.10.2022 в отношении лиц, на которых распространялся "мораторий на банкротство", не начисляются проценты по обязательствам со сроком исполнения до 01.04.2022'>?</abbr>
+                            </em>
+                        </label>
+                        <span class='tip-block'>
+                            <span class="tip">
+                                С 01.04.2022 по 01.10.2022 в отношении лиц, на которых распространялся "мораторий на банкротство", не начисляются проценты по обязательствам со сроком исполнения до 01.04.2022<label for="tip5" class="tip-close">X</label>
+                            </span>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class=dot>Внешний вид расчета:</td>
+                    <td colspan=2 class=dot>
+                        <input type=radio name='rrvid' value=0 onCLick='beg()'>
+                        текст &nbsp;&nbsp;&nbsp;<input type=radio name='rrvid' value=1 onCLick=beg() checked>таблица
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td colspan=2>
+                        <input type=checkbox id='qrcodebox' onClick='beg()' checked>
+                        не добавлять QR-код со ссылкой на расчет
+	    	<input type="checkbox" id="tip6" class="tip-checkbox">
+                        <label for="tip6" class="support">
+                            <em>
+                                <abbr title='QR-код позволит получить доступ к расчету в том числе без сохраненной (или при утраченной) гипер-ссылки на расчет. Например, с распечатанного листа с расчетом. QR-код также позволит быстро проверить распечатанный расчет. На время ввода данных в калькулятор рекомендуется отключить генерацию QR-кода для более быстрого отклика программы'>?</abbr>
+                            </em>
+                        </label>
+                        <span class='tip-block'>
+                            <span class="tip">
+                                QR-код позволит получить доступ к расчету в том числе без сохраненной (или при утраченной) гипер-ссылки на расчет. Например, с распечатанного листа с расчетом.<br>
+                                QR-код также позволит быстро проверить распечатанный расчет.<br>
+                                На время ввода данных в калькулятор рекомендуется отключить генерацию QR-кода для более быстрого отклика программы<label for="tip6" class="tip-close">X</label>
+                            </span>
+                        </span>
+                    </td>
+                </tr>
+                <tr style="display:none">
+                    <td class=dot></td>
+                    <td colspan=2 class=dot>
+                        <input type=checkbox id='sst317' onClick='beg()'>
+                        добавить расчет процентов по <a href='st317-1gk.htm' class=llink target=_blank>ст.317.1 ГК РФ</a>
+                    </td>
+                </tr>
+            </table>
+            <span style="font-size:8px">
+                <br>
+            </span>
+            <input type=button value='Ок' onClick=beg() class='mainbutton' title='Рассчитать'>
+            &nbsp;&nbsp;<input type=button value='Очистить' onClick=clean() class='mainbutton'>
+            &nbsp;&nbsp;<input type=button value='Версия для печати' target=_blank onClick=page4print() id='versionforprint' class='mainbutton'>
+            &nbsp;&nbsp;<input type=button value='Копировать расчет' onClick=copyTableToBufer('rraschet' ) id='copyRButton' class=mainbutton title='Копировать расчет в буфер обмена'>
+            &nbsp;&nbsp;<input type=button value='Экспорт в Word' title='Экспорт расчета в Word' id='btn-export' onclick='exportHTML();' class=mainbutton>
+            <!-- &nbsp;&nbsp; <noindex><a href=mailto:no@spam.ru onMouseover="this.href='&#109;&#97;&#105;&#108;&#116;&#111;&#58;'+'info'+'@'+'395gk'+'.'+'ru';" class=llink title='Обратная связь'>info@395gk.ru</a></noindex> -->
+            <br>
+            <br>
+            <span id='llink'>
+                Ссылка на расчет: <a href=https://395gk.ru class=llink target=_blank id='copy_from_href'>https://395gk.ru</a>
+            </span>
+            &nbsp;&nbsp;<input type=button value='Копировать ссылку' id='copylinkbutton' data-fromid='copy_from_href' data-from='href' title='Копировать ссылку на расчет в буфер обмена' onClick="this.value=document.getElementById('copylinkbutton2').value='Ссылка скопирована';document.getElementById('copyRButton').value=document.getElementById('copyRButton2').value='Копировать расчет';" class=mainbutton>
+            <span id='linksymbnum'></span>
+            <div id="podrobnee"></div>
+            <div id="zatemnenie"></div>
+            <div id="divImportDolga">
+                <table border=0>
+                    <tr>
+                        <td style="vertical-align:top;">
+                            <p>
+                                Вставьте данные о <b>задолженности</b>
+                                :
+                            </p>
+                            <textarea id="importDolga" class=importtextarea></textarea>
+                            <br>
+                            <input type=button onClick="importDolgi()" value="Импорт" class=mainbutton>
+                            <input type=button onClick="changeDisplay('divImportDolga');changeDisplay('zatemnenie');return false;" value="Закрыть" class=mainbutton>
+                            <input type=button value="Очистить" onClick="d.getElementById('importDolga').value='';return false;" class=mainbutton>
+                        </td>
+                        <td style="vertical-align:top;">
+                            <p>Как вставить данные:</p>
+                            <span class=explain>
+                                1. Скопируйте данные из таблицы (см. рисунок).<br>
+                                Очередность колонок важна:<br>
+                                1) дата 2) сумма 3) примечание.<br>
+                                Примечание - необязательное поле.<br>
+                                <img src="/img/howToImport.png" width=100% height=100% vspace=5>
+                                <br>
+                                2. Вставьте данные в поле слева.<br>
+                                3. Нажмите кнопку "Импорт".<br>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="divImportOplat">
+                <table border=0>
+                    <tr>
+                        <td style="vertical-align:top;">
+                            <p>
+                                Вставьте данные об <b>оплате</b>
+                                :
+                            </p>
+                            <textarea id="importOplat" class=importtextarea></textarea>
+                            <br>
+                            <input type=button onClick="importOplaty()" value="Импорт" class=mainbutton>
+                            <input type=button onClick="changeDisplay('divImportOplat');changeDisplay('zatemnenie');return false;" value="Закрыть" class=mainbutton>
+                            <input type=button value="Очистить" onClick="d.getElementById('importOplat').value='';return false;" class=mainbutton>
+                        </td>
+                        <td style="vertical-align:top;">
+                            <p>Как вставить данные:</p>
+                            <span class=explain>
+                                1. Скопируйте данные из таблицы (см. рисунок).<br>
+                                Очередность колонок важна:<br>
+                                1) дата 2) сумма 3) примечание.<br>
+                                Примечание - необязательное поле.<br>
+                                <img src="/img/howToImport.png" width=100% height=100% vspace=5>
+                                <br>
+                                2. Вставьте данные в поле слева.<br>
+                                3. Нажмите кнопку "Импорт".<br>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="divimportfromlink" style="display:none">
+                <table border=0>
+                    <tr>
+                        <td style="vertical-align:top;">
+                            <p>Вставьте ссылку на расчет калькулятора 395gk.ru:</p>
+                            <textarea id="importfromlink" class=importtextarea></textarea>
+                            <br>
+                            <input type=button onClick="clean();getlochash(d.getElementById('importfromlink').value);link2code();changeDisplay('divimportfromlink');changeDisplay('zatemnenie');d.getElementById('importfromlink').value='';return false;" value="Импорт" class=mainbutton>
+                            <input type=button onClick="changeDisplay('divimportfromlink');changeDisplay('zatemnenie');return false;" value="Закрыть" class=mainbutton>
+                            <input type=button value="Очистить" onClick="d.getElementById('importfromlink').value='';return false;" class=mainbutton>
+                        </td>
+                        <td style="vertical-align:top;">
+                            <br>
+                            <br>
+                            <br>
+                            <span class=explain>
+                                Калькулятор генерирует ссылку на расчет.<br>
+                                Она позволяет не вводить повторно ранее введенные данные в калькулятор.<br>
+                                Чем больше данных, тем длиннее ссылка.<br>
+                                <br>
+                                Но браузеры обычно воспринимают только первые 2700-3000 символов ссылки.<br>
+                                Это приводило к потере части данных из слишком длинных ссылок на расчет.<br>
+                                <br>
+                                Чтобы преодолеть это ограничение,<br>
+                                вставьте ссылку на расчет в поле слева и нажмите кнопку "Импорт".<br>
+                                <br>Также этот инструмент умеет исправлять некоторые повреждения ссылки на расчет.
+                
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <br>
+            <br>
+        </div>
+        <div style="display:flex; justify-content:start;" class=noprint>
+            <!-- Yandex.RTB R-A-335436-1 -->
+            <div id="yandex_rtb_R-A-335436-1" style="justify-self:start"></div>
+            <script>
+                window.yaContextCb.push( () => {
+                    Ya.Context.AdvManager.render({
+                        renderTo: 'yandex_rtb_R-A-335436-1',
+                        blockId: 'R-A-335436-1'
+                    })
+                }
+                )
+            </script>
+            <!-- Yandex.RTB -->
+        </div>
+        <span class='showprint noprint'>
+            <br>
+            <input type=button value="Печатать" onClick='window.print()' class='mainbutton'>
+            &nbsp;&nbsp;<input type=button value="Редактировать расчет" onClick=ordinaryview() class='mainbutton'>
+            &nbsp;&nbsp;<input type=button value='Копировать расчет' onClick=copyTableToBufer('rraschet' ) id='copyRButton3' class=mainbutton title='Копировать расчет в буфер обмена'>
+            &nbsp;&nbsp;<input type=button value='Экспорт в Word' title='Экспорт расчета в Word' onclick='exportHTML();' class=mainbutton>
+            <hr>
+        </span>
+        <span class='noprint2' id='warncontainer' style='display:none'>
+            <br>
+            <br>
+            <div style='background-color: #DAEEF6; width:724px; padding: 10px' id='warnings'>
+                <b>Обратите внимание:</b>
+            </div>
+            <!-- background-color: #EBF5F9; #f8f32b; #79B9D3; #C9E2ED color:#ef0000 -->
+        </span>
+        <span class=noprint>
+            <br>
+        </span>
+        <span class=noprint2>
+            <br>
+        </span>
+        <span class=timesnewroman>
+            <div id="rraschet">
+                <h2 style="font-family: Times New Roman; font-size:12pt; margin: 0;">Расчет процентов по правилам статьи 395 ГК РФ</h2>
+                <br>
+                При сумме задолженности <b>0</b>
+                руб.<br>
+                проценты за пользование чужими денежными средствами составляют:
+		
+                <div id='space4qr' styel="display:block">
+                    <br>
+                    <a href=https://395gk.ru id='linkdescription' class=llink target=_blank></a>
+                    <br>
+                    <br>
+                    <a href=https://395gk.ru id="qrcode" target=_blank></a>
+                </div>
+            </div>
+        </span>
+        <div class='noprint2'>
+            <br>
+            <input type=button value="Версия для печати" onClick='page4print()' class=mainbutton>
+            &nbsp;&nbsp;<input type=button value="Копировать расчет" id=copyRButton2 onClick=copyTableToBufer('rraschet' ) class=mainbutton title="Копировать расчет в буфер обмена">
+            &nbsp;&nbsp;<input type=button value='Экспорт в Word' title='Экспорт расчета в Word' onclick='exportHTML();' class=mainbutton>
+            <span id=qr1raz></span>
+            <br>
+            <br>
+            <span id='llink2'>
+                Ссылка на расчет: <a href=https://395gk.ru class=llink target=_blank>https://395gk.ru</a>
+            </span>
+            &nbsp;&nbsp;<input type=button value='Копировать ссылку' id='copylinkbutton2' data-fromid='copy_from_href' data-from='href' title='Копировать ссылку на расчет в буфер обмена' onClick="this.value=document.getElementById('copylinkbutton').value='Ссылка скопирована';document.getElementById('copyRButton').value=document.getElementById('copyRButton2').value='Копировать расчет';" class=mainbutton>
+            <span id='linksymbnum2'></span>
+            <br>
+            <br>
+            <table style='background-color:#cfffb3; border: 1px solid #a0a0a0; width:800px; padding:5px; border-radius: 7px;'>
+                <tr>
+                    <td>
+                        <!-- style='text-align:right' -->
+                        Госпошлина в суд по
+            
+                        <select id='gp' onChange='getgp()' onClick='getgp()'>
+                            <option value=0 selected onClick='getgp()' title='суды общей юрисдикции, мировые судьи'>ГПК РФ
+                
+                            <option value=1 onClick='getgp()' title='арбитражные суды'>АПК РФ
+            
+                        </select>
+                        <br>при цене иска:
+        
+                    </td>
+                    <td>
+                        <input type=radio name='cenaiska' value=0 onCLick='getgp()' checked>
+                        <span id=cenaprocent>(проценты)</span>
+                        <br>
+                        <input type=radio name='cenaiska' value=1 onCLick='getgp()'>
+                        <span id=cenadolgprocent>(долг + %)</span>
+                        <br>
+                        <input type=radio name='cenaiska' value=2 onCLick='getgp()' id=svoyacena>
+                        <input id=cenasvoya type=text placeholder='укажите сумму в руб.' onMouseOut='this.value=human(this.value)' onKeyDown='d.getElementById("svoyacena").checked=true;letDisplayinline("krestcenasvoya");' onClick='getgp()' onChange='getgp()'>
+                        <a id=krestcenasvoya onClick='d.getElementById("cenasvoya").value="";getgp();notDisplay("krestcenasvoya");' style="color:#962420; cursor:pointer; font-size:15px;display:none;" title="очистить">
+                            <b>&times;</b>
+                        </a>
+                        <br>
+                    </td>
+                    <td>
+                        <a href=https://395gk.ru/gp/ id=hrefgp target=_blank class=llink title='Рассчитать госпошлину (откроется в новом окне)' onMouseOver='this.focus()' style='outline:none'>
+                            <b>Рассчитать</b>
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <script>
+                function sum2linkgp(ssum) {
+                    if (ssum != '') {
+                        ssum = '' + ssum
+                        ssum = ssum.replace(/\s/g, '').replace(/,/g, '.').replace(/000000000/g, 'd').replace(/00000000/g, 'v').replace(/0000000/g, 's').replace(/000000/g, 'b').replace(/00000/g, 'p').replace(/0000/g, 'c').replace(/000/g, 'k').replace(/00/g, 'w').replace(/\+/g, 'u').replace(/\//g, 'i').replace(/\*/g, 'm').replace(/\(/g, 'o').replace(/\)/g, 'e')
+                        if (/[-uimoe]/.test(ssum) != true)
+                            ssum = ssum.replace(/\.(\d)0$/, '.$1')
+                        return ssum
+                    } else {
+                        return ''
+                    }
+                }
+                function getgp() {
+                    const a = d.querySelector('input[name=cenaiska]:checked').value
+                    if (a == 0)
+                        b = sum2linkgp(d.getElementById('cenaprocent').value);
+                    else if (a == 1)
+                        b = sum2linkgp(d.getElementById('cenadolgprocent').value);
+                    else
+                        b = sum2linkgp(d.getElementById('cenasvoya').value)
+                    if (typeof b === 'undefined')
+                        b = ''
+                    let gplink = 'https://395gk.ru/gp/#'
+                    if (d.getElementById('gp').value == 1)
+                        gplink += 'a';
+                    else
+                        gplink += 'g'
+                    gplink += b + 'hf'
+                    d.getElementById('hrefgp').href = gplink
+                }
+            </script>
+            <br>
+            Если возникла проблема или ошибка, напишите нам - постараемся разобраться (укажите, пожалуйста, в письме ссылку на расчет): &#9993;
+            <noindex>
+                <a href=mailto:no@spam.ru onMouseover="this.href='&#109;&#97;&#105;&#108;&#116;&#111;&#58;'+'info'+'@'+'395gk'+'.'+'ru';" class=llink title='Обратная связь'>info@395gk.ru</a>
+            </noindex>
+            <br>
+            <br>
+            По нашим данным, по состоянию на июль 2024 г. <b>более 230 тысяч</b>
+            судебных актов содержат расчет с сайта 395gk.ru, что делает его, похоже, самым цитируемым юридическим калькулятором в судебных актах РФ
+</b>.
+
+<br>
+<br>
+Калькулятор в том числе проверяет корректность вводимых в калькулятор дат начала периода просрочки (в т.ч. при увеличении долга) с учетом положений <a href=st193gk.htm class=llink target=_blank>ст. 193 ГК РФ</a>
+и информации об общероссийских праздничных и выходных днях для 5-дневной рабочей недели (если последний день срока для оплаты/возврата средств приходится на выходной или праздничный день, то этот срок переносится вперёд на ближайший рабочий день, а просрочка начинается со следующего дня).
+
+<br>
+<br>
+Калькулятор позволяет рассчитать проценты за пользование чужими денежными средствами (пени, неустойку) в рублях, как по новым, так и по старым правилам, с учетом моратория.
+
+<br>
+<br>
+<b>Обновления онлайн-калькулятора</b>
+(с 2024-го года):
+<br>
+02.01.2025: Небольшие улучшения:<br>
+1) В табличном расчете уменьшено пустое пространство в ячейках, чтобы при копировании расчета было меньше случаев ненужного переноса данных в ячейках на другую строку;<br>
+2) Опции для учёта моратория появляются, только если период расчета затрагивает соответствующие периоды.
+<br>
+18.12.2024: Улучшена работа с введёнными суммами, содержащими неразрывные пробелы.
+<br>
+17.12.2024: <a onClick="importIzTabl('divimportfromlink');" class=llink title='импортировать данные для заполнения калькулятора из ссылки на расчет&#013;(актуально для ссылок длиннее 2700-3000 символов)'>Импорт данных из ссылки на расчет</a>
+теперь умеет исправлять повреждение ссылки, когда в сторонних программах символ '#' заменяется на '&nbsp;-&nbsp;'. Например, так происходит при переносе пользователем ссылки в Ворд способом drag'n'drop (Ворд изменяет только текст ссылки, а сам адрес ссылки копирует корректно. Но если вместо клика по ссылке в Ворде скопировать текст такой ссылки из Ворда в браузер, то браузер выдаст ошибку 404).
+<br>
+16.12.2024: Значительно уменьшено количество символов в генерируемых ссылках на расчет. Например, было 2734 символа, стало 1417 (меньше на 48%). Ранее сгенерированные ссылки на расчет по-прежнему работают. Если калькулятор не работает после обновления, то нужно перезагрузить страницу.
+<br>
+13.12.2024: Из-за особенностей Excel импорт сумм долга или оплат мог осуществляться с более чем двумя знаками после запятой. Это исправлено.
+<br>
+07.12.2024: Добавлена опция <a onClick="importIzTabl('divimportfromlink');" class=llink title='импортировать данные для заполнения калькулятора из ссылки на расчет&#013;(актуально для ссылок длиннее 2700-3000 символов)'>импорта данных из ссылки на расчет</a>
+. Находится в верхнем правом углу калькулятора.
+<br>
+28.11.2024: Улучшено получение данных из неполных (повреждённых) ссылок на расчёт.
+<br>
+08.10.2024: Добавлена возможность быстро рассчитать госпошлину в суд для полученного значения процентов, долга+процентов или произвольной суммы. Этот блок располагается после расчета процентов. 
+<br>
+11.08.2024: По-умолчанию генерация OR-кода со ссылкой на расчет теперь отключена, что даёт более быстрый отклик калькулятора при вводе данных. Если QR-код всё-таки нужен, рекомендуется включить его генерацию после завершения ввода данных или воспользоваться кнопкой "Версия для печати", где QR-код по-прежнему генерируется.
+<br>
+18.07.2024: Удаление введённой даты с помощью клавиши Backspace стало удобнее.
+<br>
+01.02.2024: Блок информации "Обратите внимание" дополнен подсказками на случай выбора редких опций порядка определения периода (не в календарных днях, делить на 360).
+<br>
+29.01.2024: 
+<br>
+1) Некоторые программы заменяют в ссылках символ ";" на другие символы, из-за чего ссылка на расчет могла не работать. Это исправлено.
+<br>
+2) В некоторых случаях ошибка в генерации Qr-кода ссылки на расчет (возникает, как правило, когда ссылка слишком длинная - более 2328 символов) приводила к остановке проверки корректности введённых дат задолженности и увеличений долга согласно статье 193 ГК РФ и информации о нерабочих днях. Это исправлено.
+<br>
+24.01.2024: Некоторые программы заменяют в ссылках знак "+" на другие символы, и если "+" использовался в примечании, то при переходе по такой ссылке на расчет этот знак мог из примечания пропадать. Это исправлено (действует только для ссылок, генерируемых с момента этого обновления).
+<br>
+14.01.2024:
+<br>
+1) При наведении курсора на поле с красной рамкой всплывает подсказка.
+<br>
+2) Поля с датами вне периода расчета выделяются голубым фоном.
+<br>
+3) Исправлена ошибка с неотображением Qr-кода при наличии "№" в примечании.
+<br>
+11.01.2024:
+<br>
+1) Вконтакте изменяет в ссылке символы "," и (в некоторых случаях) "&" на другие, что могло влиять на корректность работы ссылки на расчет из этой соц.сети. Это исправлено.
+<br>
+2) Исправлена некорректная работа ссылки на расчет при использовании символа "%" в примечании (действует только для ссылок, генерируемых с момента этого обновления).
+<br>
+08.01.2024: Реализована генерация блока информации "Обратите внимание" с подсказками и советами для конкретного расчета. Этот блок отображается при необходимости перед расчетом.
+<br>
+06.01.2024:
+<br>
+1) Добавлено выделение красной рамкой тех полей с датами, которые требуют внимания (если не заполнено обязательное поле; если указан слишком большой или слишком маленький год).
+<br>
+2) При импорте данных о долге или оплатах в одном из полей примечания могло появляться "undefined". Это исправлено.
+<br>
+3) Ранее для длинных ссылок на расчет часть ссылки не показывалась (вместо скрытой части показывалось многоточие). Но т.к. некоторые пользователи путали такую часть ссылки с полной ссылкой, вместо длинной ссылки теперь указывается просто "Ссылка".
+<br>
+4) Дополнены подсказки про конец периода расчета о том, что должна вводиться окончательная дата для всего расчета (с учетом увеличений долга и(или) оплат), а не для одной первоначальной задолженности.
+
+<br>
+<br>
+<i>Информация, полученная в результате расчета, носит справочный характер.</i>
+<script>
+    var oraz = getCookie('r');
+    if (oraz != 'zero') {
+        document.getElementById('rregion').selectedIndex = oraz;
+        //	beg();
+    }
+    //-----------------------
+    //if (location.hash!='' && location.hash.indexOf("#d")!=-1) link2code()
+
+    str = "<span id='iiframe'><iframe onLoad='svedeniya();' style='width:1px;height:0px;display:none' src='https://" + ((location.hostname.indexOf('www.') != -1) ? 'www.' : '') + "395gk.ru/baza.htm?" + Date.now() + "' name='sved" + Date.now() + "'></iframe></span>"
+    iiframe.innerHTML = str;
+
+    function Listener4backspace() {
+        for (i = 0; i < d.getElementsByClassName('date').length; i++) {
+            d.getElementsByClassName('date')[i].addEventListener('input', function(e) {
+                if (e.inputType == "deleteContentBackward")
+                    keyCodeBackspace = true;
+                else
+                    keyCodeBackspace = false;
+            });
+        }
+    }
+    Listener4backspace();
+    getgp()
+</script>
+<!--
+<br><br><br>
+<span style="color:red; font-size:12pt"><b><i>new</i></b></span>: <a href=gyperlink.htm target=_blank style="font-size:12pt">Текст</a><br>
+-->
+<br>
+<br>
+См. также:
+<br>
+- <a href=st395gk.htm class=llink target=_blank title='Проценты за пользование чужими денежными средствами'>Статья 395 ГК РФ</a>
+, <a href=st317-1gk.htm class=llink title='Проценты по денежному обязательству'>статья 317.1 ГК РФ</a>
+<br>
+- <a href=svedcb.htm class=llink target=_blank title='Процентные ставки для целей применения статьи 395 ГК РФ'>Процентные ставки для целей применения ст. 395 ГК РФ</a>
+<br>
+- <a href=https://395gk.ru/gp/ class=llink target=_blank title='Калькулятор госпошлины в суд по новым правилам с 09.09.2024 (ГПК РФ, АПК РФ)'>Калькулятор госпошлины в суд по новым правилам с 09.09.2024 (ГПК РФ, АПК РФ)</a>
+<sup>
+    <font color=red>
+        <b>новое</b>
+    </font>
+</sup>
+<br>
+- <a href=https://395gk.ru/ind/ class=llink target=_blank title='Калькулятор индексации присужденных денежных сумм по правилам ст.208 ГПК РФ, ст.183 АПК РФ'>Калькулятор индексации присужденных сумм (ст.208 ГПК РФ, ст.183 АПК РФ)</a>
+<!--<br><br><a href=#faq>Ответы на частые вопросы</a> по расчету процентов по ст. 395 ГК РФ размещены <a href=#faq>ниже</a>.-->
+<br>
+<br>
+<b>Если Вам понравился этот калькулятор процентов по ст. 395 ГК РФ, просьба сделать репост в соц. сетях. Даешь ссылку в массы! :)</b>
+<br>
+<br>
+<script type="text/javascript" src="//yastatic.net/es5-shims/0.0.2/es5-shims.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="//yastatic.net/share2/share.js" charset="utf-8"></script>
+<div class="ya-share2" data-services="vkontakte,odnoklassniki,moimir,whatsapp,telegram,viber,twitter" data-counter=""></div>
+<br>
+<!-- Альфа-Банк Кредитные карты [CPS] RU  
+<a target="_blank" rel="nofollow" href="ab100.htm"><img width="728" height="90" border="0" src="img/ab.jpg" alt="Альфа-Банк Кредитные карты [CPS] RU "/></a>
+ /banner -->
+<h3>
+    <a name=faq>Ответы на частые вопросы по расчету процентов по ст. 395 ГК РФ</a>
+</h3>
+<p>
+    <b>
+        <a name=faq1>Вопрос № 1</a>
+        : Для целей расчета процентов по <a href=st395gk.htm class=llink target=_blank>ст. 395 ГК РФ</a>
+        указывается сумма задолженности с НДС или без НДС?
+    </b>
+</p>
+<p>
+    Ответ: Сумма задолженности должна указываться с НДС (если, конечно, сумма долга облагается НДС).
+<br>
+    Данная правовая позиция сформирована в постановлении Президиума ВАС РФ от 22.09.2009 № 5451/09 по делу N <a href='go.htm?url=А50-6981/2008-Г-10' class=llink target=_blank>А50-6981/2008-Г-10</a>
+    .
+</p>
+<p>
+    <b>
+        <a name=faq2>Вопрос № 2</a>
+        : Включается ли в период просрочки день уплаты денежных средств?
+    </b>
+</p>
+<p>
+    Ответ: День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.
+<br>
+    Такие разъяснения даны в <a href=ppvs24-03-2016n7.htm#48 class=llink target=_blank>п. 48</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7, а также в "Обзоре судебной практики Верховного Суда РФ N 3 (2015)" (утв. Президиумом Верховного Суда РФ 25.11.2015) (Решение N ДК15-4).
+<br>
+    Аналогичной позиции придерживался ранее ВАС РФ: постановление Президиума ВАС РФ от 28.01.2014 N 13222/13 по делу N <a href='go.htm?url=А40-107594/12-47-1003' class=llink target=_blank>А40-107594/12-47-1003</a>
+    .
+</p>
+<p>
+    <b>
+        <a name=faq3>Вопрос № 3</a>
+        : Период просрочки должен определяться из расчета 30 дней в месяце (360 дней в году) или в календарных днях?
+    </b>
+</p>
+<p>
+    Ответ: Наш <a href=http://395gk.ru class=llink target=_blank>калькулятор расчета процентов по ст.395 ГК РФ</a>
+    позволяет произвести расчет и тем, и другим способом, для чего необходимо выбрать соответствующую опцию в строке калькулятора "Период определять".<br>
+    <b>Рекомендуем выбрать опции период определять "в календарных днях" и "делить на 365 (366)"</b>
+    .<br>
+    Ранее в пункте 2 совместного постановления Пленума Верховного Суда РФ N 13, Пленума ВАС РФ N 14 от 08.10.1998 (далее - Постановление N 13/14) было указано:<br>
+    <i>При расчете подлежащих уплате годовых процентов по ставке рефинансирования Центрального банка Российской Федерации число дней в году (месяце) принимается равным соответственно 360 и 30 дням, если иное не установлено соглашением сторон, обязательными для сторон правилами, а также обычаями делового оборота.</i>
+    <br>
+    В судебной практике это разъяснение трактовалось по-разному (см. ниже).
+<br>
+    Однако <a href=ppvs24-03-2016n7.htm#84 class=llink target=_blank>пунктом 84</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7 указанный пункт 2 Постановления N 13/14 был отменён, и практика стала единообразной - <b>период просрочки считается в календарных днях</b>
+    (а годовая процентная ставка делится на фактическое количество дней в году - на 365 или 366, ранее была в целом единообразная практика о делении годовой процентной ставки на 360).
+
+До выхода постановления Пленума Верховного Суда РФ от 24.03.2016 № 7 судебная практика по способу определения периода просрочки была неоднозначной:
+
+<br>
+    <br>
+    <u>Ранее встречавшееся правовое обоснование определения периода просрочки из расчета 30 дней в месяце и 360 дней в году:</u>
+    <br>
+    В силу п. 2 Постановления N 13/14 период просрочки следует определять из расчета 30 дней в месяце и 360 дней в году (т.н. "эффективные дни").
+<br>
+    Например, в периоде просрочки с 01.05.2014 по 04.06.2014 включительно будет 34 "эффективных" дня: 30 дней (а не 31) полного месяца мая + 4 дня июня.
+<br>
+    Примеры судебной практики с данным подходом: Постановление 7ААС от 30.07.2012 по делу N <a href='go.htm?url=А45-5943/2012' class=llink target=_blank>А45-5943/2012</a>
+    .
+
+<br>
+    <br>
+    <u>Ранее встречавшееся правовое обоснование определения периода просрочки в календарных днях:</u>
+    <br>
+    Согласно пункту 3 <a href=st395gk.htm class=llink target=_blank>статьи 395 ГК РФ</a>
+    проценты за пользование чужими денежными средствами взимаются по день уплаты суммы этих средств кредитору, если законом, иными правовыми актами или договором не установлен для начисления процентов более короткий срок.<br>
+    По смыслу данной нормы проценты начисляются за каждый день просрочки, в расчете учитываются фактические календарные дни пользования должником денежными средствами кредитора.<br>
+    Пункт 2 Постановления N 13/14 разъясняет, как следует приводить годовую процентную ставку к процентной ставке за один день, а не устанавливает порядок расчета периода просрочки платежа.<br>
+    Примеры судебной практики с данным подходом: Определения ВАС РФ от 24.05.2013 N ВАС-5844/13 по делу N <a href='go.htm?url=А68-4927/2012' class=llink target=_blank>А68-4927/2012</a>
+    , от 28.05.2010 N ВАС-6181/10 по делу N <a href='go.htm?url=А26-6947/2009' class=llink target=_blank>А26-6947/2009</a>
+    , п. 9 <a href='go.htm?url=fasszo.arbitr.ru/welcome/show/633200024/374' class=llink target=_blank>Рекомендаций</a>
+    Научно-консультативного совета при Арбитражном суде Северо-Западного округа по итогам заседания 12 декабря 2014 года, Постановления ФАС Поволжского округа от 20.06.2014 по делу N <a href='go.htm?url=А55-8972/2013' class=llink target=_blank>А55-8972/2013</a>
+    , от 30.07.2013 по делу N <a href='go.htm?url=А55-27471/2012' class=llink target=_blank>А55-27471/2012</a>
+    , Постановление ФАС Центрального округа от 29.05.2012 по делу N <a href='go.htm?url=А23-1169/2011' class=llink target=_blank>А23-1169/2011</a>
+    , Постановления ФАС Московского округа от 01.06.2011 по делу N <a href='go.htm?url=А40-96152/10-13-472' class=llink target=_blank>А40-96152/10-13-472</a>
+    , от 19.07.2010 по делу N <a href='go.htm?url=А40-114858/09-20-953' class=llink target=_blank>А40-114858/09-20-953</a>
+    .
+
+
+<p>
+    <b>
+        <a name=faq4>Вопрос № 4</a>
+        :
+    </b>
+    <i>(актуально для расчета процентов за период просрочки с 01.06.2015 по 31.07.2016)</i>
+    <b>Как определить ставку, если кредитором является иностранец (иностранное юридическое лицо)?</b>
+</p>
+<p>
+    Ответ: Если кредитором является лицо, место жительства (нахождения) которого находится за пределами Российской Федерации, расчет осуществляется по ставке, сложившейся в федеральном округе по месту нахождения российского суда, рассматривающего спор.
+<br>
+    Такие разъяснения даны в "Обзоре судебной практики Верховного Суда РФ N 3 (2015)" (утв. Президиумом Верховного Суда РФ 25.11.2015), а также в <a href=ppvs24-03-2016n7.htm#40 class=llink target=_blank>пункте 40</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7.
+</p>
+<p>
+    <b>
+        <a name=faq5>Вопрос № 5</a>
+        : Если договор заключён до 01.06.2015, то как должны рассчитываться проценты за пользование чужими денежными средствами, начиная с 01.06.2015 и позднее - по правилам статьи 395 ГК РФ, действующим до или после 01.06.2015?
+    </b>
+</p>
+<p>
+    Ответ: Даже если договор заключён до 01.06.2015, то проценты за пользование чужими денежными средствами, начиная с 01.06.2015 по 31.07.2016, подлежат расчету по правилам статьи 395 ГК РФ, действующим с 01.06.2015 по 31.07.2016 (а за период просрочки с 01.08.2016 - по правилам статьи 395 ГК РФ, действующим с 01.08.2016).
+<br>
+    Такие разъяснения даны в <a href=ppvs24-03-2016n7.htm#83 class=llink target=_blank>п. 83</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7.
+<br>
+    См. также <a href=https://395gk.ru/#faq7 class=llink target=_blank>ответ на вопрос № 7</a>
+    .
+<br>
+    <i>Калькулятор процентов 395gk.ru автоматически применит ту редакцию статьи 395 ГК РФ, которая подлежит применению для соответствующего периода просрочки.</i>
+</p>
+<p>
+    <b>
+        <a name=faq6>Вопрос № 6</a>
+        : C 01.01.2016 ставка рефинансирования ЦБ РФ приравнена к ключевой ставке. Почему калькулятор при расчете процентов по ст. 395 ГК РФ этого не учитывает?
+    </b>
+</p>
+<p>
+    Ответ: Действительно, с 01.01.2016 ставка рефинансирования ЦБ РФ приравнена к ключевой ставке. Однако для расчета процентов по ст. 395 ГК РФ это не имеет значения, поскольку по правилам <a href=st395gk.htm class=llink target=_blank>статьи 395 ГК РФ</a>
+    в редакции Федерального закона № 42-ФЗ в расчете с 01.06.2015 (по 31.07.2016 включительно) должна учитываться не ставка рефинансирования ЦБ РФ (ключевая ставка), а <a href=svedcb.htm class=llink target=_blank title="Процентные ставки для расчета процентов по ст. 395 ГК РФ">средние ставки по вкладам физических лиц</a>
+    по месту жительства (нахождения) кредитора.
+<br>
+    C 01.08.2016 (когда вступили в силу очередные изменения в <a href=st395gk.htm class=llink target=_blank>ст. 395 ГК РФ</a>
+    ) в расчете должна применяться ключевая ставка.
+<br>
+    <i>Калькулятор неустойки по ст.395 ГК РФ (395gk.ru) автоматически применит ту редакцию статьи 395 ГК РФ, которая подлежит применению к соответствующему периоду просрочки.</i>
+</p>
+<p>
+    <b>
+        <a name=faq7>Вопрос № 7</a>
+        : Редакция ст. 395 ГК РФ несколько раз менялась. Как должны считаться проценты, если часть периода просрочки пришлась на действие одной редакции ст. 395 ГК РФ, а часть - на действие другой редакции ст. 395 ГК РФ?
+    </b>
+</p>
+<p>
+    Ответ: Действительно, в разное время действовали 3 редакции <a href=st395gk.htm class=llink target=_blank>ст. 395 ГК РФ</a>
+    (по ссылке можно увидеть все 3). В первой редакции (с 1995 г. по 31.05.2015 включительно) проценты, с учетом разъяснений, считались по ставке рефинансирования ЦБ РФ. При этом можно было применить одну ставку, которая действовала на дату подачи иска в суд или на дату вынесения решения суда. <i>С 14.09.2012 (до 01.01.2016) ставка рефинансирования составляла 8,25%. На практике, при вынесении решения суда после 14.09.2012, как правило, ко всему периоду просрочки по правилам первой редакции ст. 395 ГК РФ применялась одна ставка - 8,25%. Именно в такой логике считает наш калькулятор в отношении периода просрочки до 01.06.2015 (т.е. в отношении периода действия первой редакции ст. 395 ГК РФ).</i>
+    Во второй редакции (с 01.06.2015 по 31.07.2016 включительно) проценты считались по <a href=svedcb.htm class=llink target=_blank title="Средние ставки банковского процента по вкладам физических лиц для целей применения ст. 395 ГК РФ (по федеральным округам)">средним ставкам банковского процента по вкладам физ.лиц</a>
+    (определялись ЦБ РФ по каждому федеральному округу), действовавшим в соответствующие периоды просрочки. В третьей редакции (с 01.08.2016 по н.в.) проценты считаются по ключевой ставке, действовавшей в соответствующие периоды.<br>
+    При этом, если часть периода просрочки пришлась на период действия той или иной редакции ст. 395 ГК РФ, то именно эта редакция ст. 395 ГК РФ к этому периоду просрочки и должна применяться.<br>
+    Например, надо посчитать проценты за период с 17.04.2015 по 22.11.2017. Тогда за период с 17.04.2015 по 31.05.2015 проценты считаются по правилам первой редакции ст. 395 ГК РФ, за период с 01.06.2015 по 31.07.2016 - по правилам второй редакции, за период с 01.08.2016 по 22.11.2017 - по правилам третьей редакции.<br>
+    Почему так? Это следует из ст. 4 ГК РФ, а также из законов, которыми вносились изменения в ст. 395 ГК РФ. Так, согласно ч. 1 ст. 4 ГК РФ 
+    <i>
+        "Акты гражданского законодательства не имеют обратной силы и <b>применяются к отношениям, возникшим после введения их в действие.</b>
+        Действие закона распространяется на отношения, возникшие <b>до введения его в действие</b>
+        , <u>только в случаях</u>
+        , когда это <b>прямо</b>
+        предусмотрено законом"
+    </i>
+    . То есть, в силу ст. 4 ГК РФ, редакция статьи 395 ГК РФ, которая вступила в силу с 01.06.2015 (и действовала по 31.07.2016), может применяться к "отношениям сторон" (к соответствующему периоду просрочки) только с 01.06.2015 (по 31.07.2016). Она могла бы применяться ранее 01.06.2015, только если бы это было прямо предусмотрено законом. Но законами, которыми принимались новые редакции ст. 395 ГК РФ, не было этого предусмотрено.<br>
+    Кроме того, что изложенное следует из указанных законов, такие разъяснения (в части применения первой и второй редакции ст. 395 ГК РФ) даны в <a href=ppvs24-03-2016n7.htm#83 class=llink target=_blank>п. 83</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7.
+<br>
+    <i>Калькулятор 395gk.ru для расчета неустойки по ст.395 ГК РФ автоматически применит ту редакцию статьи 395 ГК РФ, которая подлежит применению к соответствующему периоду просрочки.</i>
+</p>
+<p>
+    <b>
+        <a name=faq8>Вопрос № 8</a>
+        : Количество дней в году при расчете процентов по ст. 395 ГК РФ?
+    </b>
+</p>
+<p>
+    Ответ: 365 или (для високосного года) 366. Это правило действует с 24.03.2016, когда <a href=ppvs24-03-2016n7.htm#84 class=llink target=_blank>пунктом 84</a>
+    постановления Пленума Верховного Суда РФ от 24.03.2016 № 7 был отменён пункт 2 совместного постановления Пленума Верховного Суда РФ N 13, Пленума ВАС РФ N 14 от 08.10.1998. Ранее число дней в году приравнивалось к 360. См. также ответ на вопрос № 3.
+</p>
+<p>
+    <b>
+        <a name=faq9>Вопрос № 9</a>
+        : Актуальная формула расчета процентов по ст. 395 ГК РФ?
+    </b>
+    (с 01.08.2016 по н.в.)
+</p>
+<p>
+    Ответ: Проценты = Сумма долга х Количество дней просрочки x Ключевая ставка ЦБ РФ / Количество дней в году.<br>
+    Например, проценты по ст. 395 ГК РФ от 100 000 руб. долга за период с 05.12.2023 по 29.01.2024 <a href=https://395gk.ru/#d1kw#f5.12.23#s29.1.24#t#c## class=llink target=_blank title='Ссылка на расчет с этим примером'>составят</a>
+    :<br>
+    - с 05.12.2023 по 17.12.2023 (13 дн.): 100 000 x 13 x 15% / 365 = 534,25 руб.<br>
+    - с 18.12.2023 по 31.12.2023 (14 дн.): 100 000 x 14 x 16% / 365 = 613,70 руб.<br>
+    - с 01.01.2024 по 29.01.2024 (29 дн.): 100 000 x 29 x 16% / 366 = 1 267,76 руб.<br>Итого: 2 415,71 руб. (= 534,25 + 613,70 + 1 267,76).
+</p>
+<br>
+<a href=#top class=llink>&uarr;Наверх к калькулятору</a>
+<br>
+<br>
+<b>Если Вам понравился этот калькулятор задолженности по ст. 395 ГК РФ, просьба сделать репост в соц. сетях. Даешь ссылку в массы! :)</b>
+<br>
+<br>
+<div class="ya-share2" data-services="vkontakte,facebook,odnoklassniki,moimir,whatsapp,telegram,viber,twitter" data-counter=""></div>
+<br>
+<!-- admitad.banner: 
+ /admitad.banner -->
+<br>
+<br>
+<!--LiveInternet logo-->
+<a href="//www.liveinternet.ru/click" target="_blank">
+    <img src="//counter.yadro.ru/logo?44.12" title="LiveInternet" alt="" border="0" width="31" height="31"/>
+</a>
+<!--/LiveInternet-->
+</div></body></html>

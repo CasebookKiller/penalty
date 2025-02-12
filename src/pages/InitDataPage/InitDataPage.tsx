@@ -1,9 +1,10 @@
 import { type FC, useMemo } from 'react';
 import { parseInitData } from '@telegram-apps/sdk';
 import { useLaunchParams, type User } from '@telegram-apps/sdk-react';
-import { List, Placeholder } from '@telegram-apps/telegram-ui';
 
 import { DisplayData, type DisplayDataRow } from '@/components/DisplayData/DisplayData.tsx';
+
+import './InitDataPage.css';
 
 function getUserRows(user: User): DisplayDataRow[] {
   return [
@@ -78,24 +79,35 @@ export const InitDataPage: FC = () => {
 
   if (!initDataRows) {
     return (
-      <Placeholder
-        header="Ой"
-        description="Приложение было запущено с отсутствующими данными инициализации"
-      >
-        <img
-          alt="Наклейка Telegram"
-          src="https://xelene.me/telegram.gif"
-          style={{ display: 'block', width: '144px', height: '144px' }}
-        />
-      </Placeholder>
+      <>
+        <div>
+          <section className="app placeholder">
+            <img
+              alt="Наклейка Telegram"
+              src="https://casebookkiller.github.io/prime-reactjs-template/telegram.gif" 
+              style={{display: 'block', width: '144px', height: '144px'}}
+            />
+            <dl>
+              <dt>
+                Ой
+              </dt>
+              <dd>
+                Приложение было запущено с отсутствующими данными инициализации
+              </dd>
+            </dl>
+          </section>
+        </div>
+      </>
     );
   }
+  
   return (
-    <List>
+    <div>
       <DisplayData header={'Данные инициализации'} rows={initDataRows}/>
       {userRows && <DisplayData header={'Пользователь'} rows={userRows}/>}
       {receiverRows && <DisplayData header={'Получатель'} rows={receiverRows}/>}
       {chatRows && <DisplayData header={'Чат'} rows={chatRows}/>}
-    </List>
+    </div>
   );
+
 };

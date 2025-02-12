@@ -38,16 +38,19 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          tgbro: string | null
           tgid: string
         }
         Insert: {
           created_at?: string
           id?: number
+          tgbro?: string | null
           tgid: string
         }
         Update: {
           created_at?: string
           id?: number
+          tgbro?: string | null
           tgid?: string
         }
         Relationships: []

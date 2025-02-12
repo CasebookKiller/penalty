@@ -23,20 +23,24 @@ if (import.meta.env.DEV) {
   if (shouldMock) {
     const initDataRaw = new URLSearchParams([
       ['user', JSON.stringify({
-        id: import.meta.env.VITE_MOCK_USER_ID || 99281932,
-        first_name: 'Ivan',
-        last_name: 'Petrov',
-        username: 'petrov',
+        id: 275342303,//99281932,
+        //id: import.meta.env.VITE_MOCK_USER_ID || 99281932,
+        first_name: 'Alexey',//'Ivan',
+        last_name: 'Kuznetsov',//'Petrov',
+        username: 'kuznetsov_proff',//'petrov',
         language_code: 'ru',
         is_premium: true,
         allows_write_to_pm: true,
+        photo_url: 'https:\/\/t.me\/i\/userpic\/320\/2CiqQwc71uCtRJ4U9lDxhNT69Cc80GOQ9siaD9XEbmQ.svg'
       })],
       ['signature', 'wP0hiNsZtrjRu_f8IE9rbgjic-lnFm4MoSBPKhMvOtZgJDqA8SSQN421SsnqxQResAsZaShR4eUuL4WKUAQLCQ'],
-      ['hash', '89d6079ad6762351f38c6dbbc41bb53048019256a9443988af7a48bcad16ba31'],
-      ['auth_date', '1716922846'],
+      ['hash', '83eb57c847e68e0ae6eab388f3d4d847aa73b2456a3f522ec5a044ece349adb8'],
+      ['auth_date', '1733665170'],
       ['start_param', 'debug'],
+      //['start_param', 'debugbro275342303'],
+      //['start_param', 'debugclcg68979879nhbro99281932'],
       ['chat_type', 'sender'],
-      ['chat_instance', '8428209589180549439'],
+      ['chat_instance', '-6224918917665718056'],
     ]).toString();
 
     mockTelegramEnv({
@@ -57,7 +61,7 @@ if (import.meta.env.DEV) {
       },
       initData: parseInitData(initDataRaw),
       initDataRaw,
-      version: '7.10',
+      version: '8.1',
       platform: 'tdesktop',
     });
     sessionStorage.setItem('____mocked', '1');

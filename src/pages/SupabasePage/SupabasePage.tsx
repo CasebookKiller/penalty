@@ -4,7 +4,7 @@ import './SupabasePage.css';
 import Supabase from '../../supabaseClient';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
-import { Cell } from '@telegram-apps/telegram-ui';
+import { Panel } from 'primereact/panel';
 
 const SBaseContext = createContext(Supabase);
 
@@ -47,16 +47,33 @@ export const SupabasePage: FC = () => {
     <>
       <SBaseContext.Provider value={Supabase}>
         <div className="SupabasePage">
-          {ids.map((id) => (
-            <Cell
-              key={id.id}
-              
-              description={new Date(rectifyFormat(id.created_at)).toLocaleString()}
-            >
-              <div>{id.id}</div>
-              <div>Пользователь: {id.tgid}</div>
-            </Cell>
-          ))}
+          <Panel
+            className='shadow-5 mx-1 mt-1 mb-2'
+            header={'Пользователи'}
+            footer={'В базе данных содержатся сведения об идентификаторах пользователей Telegram'}
+          >
+            {ids.map((id) => (
+              <div
+                key={id.id} 
+                className='flex flex-wrap align-items-center gap-4 app p-2'
+              >
+                <div className='flex-1 flex flex-column gap-1 xl:mr-8'>
+                  <span
+                    className='app font-size-subheading'
+                  >
+                    {id.id} - {id.tgid}
+                  </span>
+                  <div className='flex align-items-center gap-2'>
+                    <span
+                      className='app font-size theme-hint-color font-weight-content nowrap overflow-ellipsis'
+                    >
+                      {new Date(rectifyFormat(id.created_at)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Panel>
         </div>
       </SBaseContext.Provider>
     </>

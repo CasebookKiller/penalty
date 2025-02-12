@@ -1,24 +1,4 @@
 :root {
-  --app-theme-link-color: var(--tg-theme-link-color)!important;
-}
-
-.display-data__header {
-  font-weight: 400;
-}
-
-.display-data__line {
-  padding: 16px 24px;
-}
-
-.display-data__line-title {
-  color: var(--tg-theme-subtitle-text-color);
-}
-
-.display-data__line-value {
-  word-break: break-word;
-}
-
-:root {
   --app-font-size: 15px;
   --app-font-size-2: 17px;
   --app-font-size-header: 20px;
@@ -74,28 +54,7 @@
   font-size: var(--app-font-size);
 }
 
-.p-checkbox {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-.p-checkbox .p-checkbox-box {
-  width: 20px;
-  height: 20px;
-}
-
-.p-checkbox.p-highlight .p-checkbox-box {
-  border-color: var(--app-theme-link-color);
-  background: var(--app-theme-link-color);
-}
-
-.p-disabled, .p-disabled * {
-  cursor: default;
-  pointer-events: none;
-  user-select: none;
-  color: var(--app-theme-text-color);
-}
-
+/** app */
 .app.font-size {
   font-size: var(--app-font-size);
 }
@@ -155,6 +114,7 @@
   font-size: .5rem;
 }
 
+
 .w-2-5rem {
   width: 2.5rem !important;
 }
@@ -169,10 +129,6 @@
 
 .app.p-2 {
   padding: 0.75rem 0rem !important;
-}
-
-.app.wrap {
-  word-break: break-word;
 }
 
 .app.nowrap {
@@ -190,17 +146,4 @@
 
 .app.cursor-pointer {
   cursor: var(--app-cursor-pointer);
-}
-
-.app.text-readonly {
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-}
-
-.app.theme-bg-link-color {
-  color: var(--app-theme-link-color);
 }
