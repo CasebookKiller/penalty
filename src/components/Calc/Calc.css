@@ -179,3 +179,21 @@ td[data-pc-name="datatable"] {
 .numberOfDays > .p-inputtext {
   text-align: center;
 }
+
+.p-dataview .p-dataview-header {
+  background: #1f2937;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid #424b57;
+  border-width: 0 0 1px 0;
+  padding: 1rem 0rem;
+  font-weight: 700;
+}
+
+.p-dataview .p-dataview-footer {
+  background: #1f2937;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid #424b57;
+  border-width: 0 0 1px 0;
+  padding: 1rem 0rem;
+  font-weight: 700;
+}
