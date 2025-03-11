@@ -60,6 +60,10 @@
   border-radius: 6px 0px 0px 6px ;
 }
 
+#rate > .p-inputnumber-input {
+  border-radius: 6px 0px 0px 6px ;
+}
+
 #currency.p-button-group .p-button:first-of-type {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -68,6 +72,20 @@
 }
 
 #currency > .p-component {
+  font-family: var(--font-family);
+  font-feature-settings: var(--font-feature-settings, normal);
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+#periodtype.p-button-group .p-button:first-of-type {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#periodtype > .p-component {
   font-family: var(--font-family);
   font-feature-settings: var(--font-feature-settings, normal);
   font-size: 1rem;

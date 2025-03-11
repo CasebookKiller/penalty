@@ -5,7 +5,6 @@ import { dateFromString, getDayOfYear, getDays, doKeyRatesTable } from './functi
 
 import { FC, useEffect, useState } from 'react';
 
-
 import { Panel } from 'primereact/panel';
 import { DataTable } from 'primereact/datatable';
 import './Calc.css';
@@ -24,7 +23,7 @@ addLocale('ru', RU.ru);
 locale('ru');
     
 interface CalcProps {
-  title?: string;
+  type?: number; // 0 - 395, 1 - penalty
 }
 
 interface MainTableRow {
@@ -64,65 +63,22 @@ const debtincrease = [
   { id: 3, date: dateFromString('12.04.2025'), sum: 1000 },
 ];
 
-  /*
-  function getKeyRate() {
-    const xmlhttp = new XMLHttpRequest();
-          xmlhttp.open('POST', 'https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx');
-          xmlhttp.setRequestHeader('Content-Type', 'application/soap+xml; charset=utf-8');
-          //xmlhttp.setRequestHeader('Host', 'url');
-          xmlhttp.setRequestHeader('Access-Control-Request-Origin', 'http://localhost:5173');
-          xmlhttp.setRequestHeader('Access-Control-Request-Origin', '*');
-          xmlhttp.setRequestHeader('Access-Control-Allow-Methods', 'DELETE, POST, GET, OPTIONS');
-          xmlhttp.setRequestHeader('SOAPAction', 'http://web.cbr.ru/KeyRateXML');
-
-    const fromDate = '01.01.2025';
-    const toDate = '31.01.2025';
-
-    // build SOAP request
-    const sr =
-      '<?xml version="1.0" encoding="utf-8"?>' +
-      '<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' + 
-        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' +
-        'xmlns:soap12="http://www.w3.org/2003/05/soap-envelope>' +
-        '<soap12:Body>' +
-          '<KeyRateXML xmlns="http://web.cbr.ru/">' +
-            '<fromDate>' + fromDate + '</fromDate>' +
-            '<ToDate>' + toDate + '</ToDate>' +
-          '</KeyRateXML>' +
-        '</soap12:Body' +
-      '</soap12:Envelope>';
-
-      xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4) {
-          if (xmlhttp.status == 200) {
-            console.log(xmlhttp.responseText);
-            // alert('done. use firebug/console to see network response');
-          }
-        }
-      }
-      // Send the POST request
-      xmlhttp.setRequestHeader('Content-Type', 'text/xml');
-      xmlhttp.send(sr);
-      // send request
-      // ...
-  }
-*/
-  //getKeyRate();
 
 
 const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
+console.log(keyratesTable);
 
-export const Calc: FC<CalcProps> = ({title}) => {
-  //const [mainTable, setMainTable] = useState<MainTableRow[]>([]); // ежедневные записи
-  //const [shortTable, setShortTable] = useState<ShortTableRow[]>([]); // краткая таблица
-  //const [keyratesTable, setKeyRatesTable] = useState<KeyRatesTableRow[]>(doKeyRatesTable()); // ключевые ставки по дням
+
+
+export const Calc: FC<CalcProps> = ({type}) => {
+  const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
   const [debt, setDebt] = useState<number>(0);
-  const [currency, setCurrency] = useState(1);
+  const [currency, setCurrency] = useState(1); // 1 - RUB, 2 - USD, 3 - EUR
   const [datefrom, setDateFrom] = useState(null);
   const [dateto, setDateTo] = useState(null);
   const [numberOfDays, setNumberOfDays] = useState(0);
-
-  //useEffect(() => console.log(keyratesTable),[]);
+  const [rate, setRate] = useState(0);
+  const [periodtype, setPeriodType] = useState(1); // 1 - День, 2 - Год
 
   // Платежи в погашение долга
   const [DebtDecrease, setDebtDecrease] = useState<DebtRow[]>(debtdecrease);
@@ -137,7 +93,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
 
   useEffect(() => {
     if (datefrom && dateto) {
-      const newMainTable = doMainTable(datefrom, dateto);
+      const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
       //setMainTable(newMainTable);
       const newShortTable = doShortTable(newMainTable);
       console.log(newShortTable);
@@ -145,24 +101,6 @@ export const Calc: FC<CalcProps> = ({title}) => {
     }
   }, [debt, datefrom, dateto]);
   
-
-  /*
-  const products = [
-    {id: 1, name: 'Product 1', count: 1},
-    {id: 2, name: 'Product 2', count: 2},
-    {id: 3, name: 'Product 3', count: 3},
-  ];
-  */
-
-/*
-  interface Row {
-    id: number;
-    name: string;
-    count: number;
-  }
-*/
-
-
   interface DebtRow {
     id: number;
     date: Date;
@@ -170,10 +108,21 @@ export const Calc: FC<CalcProps> = ({title}) => {
   }
 
   const currencies = [
-    { name: '₽', value: 1 },
-    { name: '$', value: 2 },
-    { name: '€', value: 3 }
+    { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
+    { name: '$', value: 2, text: 'Доллар США', eng: 'USD', rus: 'долл.' },
+    { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
   ];
+
+  const periodtypes = [
+    {
+      name: 'В день',
+      value: 1,
+    },
+    {
+      name: 'В год',
+      value: 2,
+    }
+  ]
 
 
   function getMaxDebtRowId( array: DebtRow[] ) {
@@ -300,14 +249,28 @@ export const Calc: FC<CalcProps> = ({title}) => {
     return rows;
   }
 
-  function doMainTable(from: Date, to: Date) {
+  function doMainTable(
+    from: Date,
+    to: Date,
+    type?: number, // 0 - 395, 1 - договорная неустойка
+    rate?: number, // ставка
+    periodType?: number // 1 - день, 2 - год
+  ) {
+    console.log('type: ', type !==1 ? 'Расчёт процентов по ст.395 ГК РФ': 'Расчёт договорной неустойки');
+    console.log('rate: ', rate );
+    
     const newMainTable: MainTableRow[] = [];
     const n = getDays(from, to);
     const newArray = new Array(n).fill(null).map((_, i) => i + 1);
 
     const currentDate = new Date();
     const currentKey = keyratesTable.find(row => row.date === new Date().toLocaleDateString())?.key;
+    const currentRate = type !==1 ? currentKey : rate;
+
     console.log('currentKey: ', currentKey);
+    console.log('currentRate: ', currentRate);
+    console.log('periodType: ', periodType);
+    console.log('periodText: ', periodtypes.filter(obj => obj.value === periodType)[0].name);
 
     let debtsumin = 0;
     let increase = 0;
@@ -324,24 +287,11 @@ export const Calc: FC<CalcProps> = ({title}) => {
 
       const inFuture = indexDate > currentDate;
       //inFuture && console.log('Будущее наступило...');
+      const currentDayRate = currentRate !== undefined ? periodType === 1 ? currentRate : currentRate / daysInYear : undefined;
+      console.log(`currentDayRate: ${currentDayRate?.toFixed(4)}%`);
+      // вот здесь нужно подставлять процентную ставку из таблицы ключевых ставок или договорную неустойку
       const key = !inFuture ? keyratesTable.find(row => row.date === indexDate.toLocaleDateString())?.key : currentKey;
       //console.log('key: ', key);
-      // вот здесь должна быть сборка всех операций для ежедневных записей
-      /*
-        interface MainTableRow {
-          id: number;
-          date: Date;
-          debtsumin?: number;
-          increase?: number;
-          decrease?: number;
-          debtsumout?: number; 
-          percent?: number;
-          penalty?: number;
-        }
-      */
-      //if (debt > 0) {
-      //  debtsumin = debtsumout = debt;
-      //}
 
       if (debtsumout !== debtsumin) {
         debtsumin = debtsumout;
@@ -530,7 +480,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
                   <div className="inline-block w-rem h-rem text-left"></div>
                 </div>
                 <div className="card-container">
-                  <div className="inline-block font-bold text-900">{Row.penalty && parseFloat(Row.penalty.toFixed(2)).toLocaleString()}</div>
+                  <div className="inline-block font-bold app theme-accent-text-color">{Row.penalty && parseFloat(Row.penalty.toFixed(2)).toLocaleString()}</div>
                 </div>
               </div>
             </div>  
@@ -564,7 +514,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
                   <div className="inline-block h-rem text-center gap-2">Задолженность</div>
                 </div>
                 <div className="card-container">
-                  <div className="inline-block h-rem text-center">Расчёт процентов</div>
+                  <div className="inline-block h-rem text-center">{type!==1 ? 'Расчёт процентов' : 'Расчёт неустойки'}</div>
                 </div>
               </div>
             </div>
@@ -574,7 +524,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
                   <div className="inline-block w-rem h-rem text-left"></div>
                 </div>
                 <div className="card-container">
-                  <div className="inline-block font-bold text-900">Сумма</div>
+                  <div className="inline-block font-bold app theme-accent-text-color">Сумма</div>
                 </div>
               </div>
             </div>  
@@ -590,7 +540,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
         <div className="flex flex-column xxl:flex-row xxl:align-items-start gap-2">
           <div className="flex flex-row flex-wrap gap-2">
             <div className="flex align-items-top justify-content-left font-bold text-700">
-              <div className="inline-block h-rem text-left">Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()}</div>
+              <div className="inline-block h-rem text-left app theme-accent-text-color">Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -628,7 +578,35 @@ export const Calc: FC<CalcProps> = ({title}) => {
             </div>
           }
           subheaderNoWrap
-        /> 
+        />
+        {/* --раздел-- ставка неустойки */}
+        { type !== 0 && <AppSection 
+          subheader={'Ставка'}
+          body={
+            <div className="p-inputgroup flex-1">
+              <InputNumber 
+                id="rate"
+                placeholder="Ставка"
+                value={rate}
+                mode='decimal'
+                maxFractionDigits={2}
+                step={0.01}
+                suffix='%'
+                onValueChange={(e) => setRate(Number(e.value))}
+                locale='ru'
+              />
+              <SelectButton 
+                id="periodtype"
+                value={periodtype} 
+                onChange={(e) => setPeriodType(e.value)} 
+                optionLabel="name" 
+                options={periodtypes}
+              />
+            </div>
+          }
+          subheaderNoWrap
+        />
+        }
         {/* --раздел-- */}
         <AppSection
           subheader={'Период расчета'}
@@ -720,6 +698,7 @@ export const Calc: FC<CalcProps> = ({title}) => {
               </div>
             </div>
           }
+          borderBottom
         />
         {/* --раздел-- */}
         {/*<AppSection 
@@ -734,25 +713,11 @@ export const Calc: FC<CalcProps> = ({title}) => {
           subheaderNoWrap
           borderBottom
         />*/}
+        
         {/* --раздел-- */}
-        <AppSection
-          header={'Заголовок 1'}
-          subheader={'Подзаголовок 1'}
-          body={'Текст 1'}
-          subheaderNoWrap
-          borderBottom
-        />
-        {/* --раздел-- */}
-        <AppSection
-          header={'Заголовок 2'}
-          subheader={'Подзаголовок 2'}
-          body={'Текст 2'}
-          subheaderNoWrap
-        />
-        {/* --раздел-- */}
-        <AppSection
+        { Rows && <AppSection
           header={'Расчёт'}
-          subheader={'Расчёт процентов за пользование чужими денежными средствами, в соответствии со статьей 395 ГК РФ'}
+          subheader={type !== 1 ? 'Расчёт процентов за пользование чужими денежными средствами, в соответствии со статьей 395 ГК РФ' : 'Расчёт неустойки производится в соответствии с условиями договора'}
           body={
             <div className="card mt-2">
               {
@@ -772,6 +737,22 @@ export const Calc: FC<CalcProps> = ({title}) => {
               
             </div>
           }
+          borderBottom
+        />}
+        {/* --раздел-- */}
+        <AppSection
+          header={'Заголовок 1'}
+          subheader={'Подзаголовок 1'}
+          body={'Текст 1'}
+          subheaderNoWrap
+          borderBottom
+        />
+        {/* --раздел-- */}
+        <AppSection
+          header={'Заголовок 2'}
+          subheader={'Подзаголовок 2'}
+          body={'Текст 2'}
+          subheaderNoWrap
         />
       </Panel>
       { false &&
@@ -973,3 +954,49 @@ id    startdate   enddate     debtsumin   increase  decrease  debtsumout  percen
     }
 ]
 */
+
+
+  /*
+  function getKeyRate() {
+    const xmlhttp = new XMLHttpRequest();
+          xmlhttp.open('POST', 'https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx');
+          xmlhttp.setRequestHeader('Content-Type', 'application/soap+xml; charset=utf-8');
+          //xmlhttp.setRequestHeader('Host', 'url');
+          xmlhttp.setRequestHeader('Access-Control-Request-Origin', 'http://localhost:5173');
+          xmlhttp.setRequestHeader('Access-Control-Request-Origin', '*');
+          xmlhttp.setRequestHeader('Access-Control-Allow-Methods', 'DELETE, POST, GET, OPTIONS');
+          xmlhttp.setRequestHeader('SOAPAction', 'http://web.cbr.ru/KeyRateXML');
+
+    const fromDate = '01.01.2025';
+    const toDate = '31.01.2025';
+
+    // build SOAP request
+    const sr =
+      '<?xml version="1.0" encoding="utf-8"?>' +
+      '<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' + 
+        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' +
+        'xmlns:soap12="http://www.w3.org/2003/05/soap-envelope>' +
+        '<soap12:Body>' +
+          '<KeyRateXML xmlns="http://web.cbr.ru/">' +
+            '<fromDate>' + fromDate + '</fromDate>' +
+            '<ToDate>' + toDate + '</ToDate>' +
+          '</KeyRateXML>' +
+        '</soap12:Body' +
+      '</soap12:Envelope>';
+
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4) {
+          if (xmlhttp.status == 200) {
+            console.log(xmlhttp.responseText);
+            // alert('done. use firebug/console to see network response');
+          }
+        }
+      }
+      // Send the POST request
+      xmlhttp.setRequestHeader('Content-Type', 'text/xml');
+      xmlhttp.send(sr);
+      // send request
+      // ...
+  }
+*/
+  //getKeyRate();

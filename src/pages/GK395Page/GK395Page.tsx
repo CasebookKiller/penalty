@@ -7,7 +7,7 @@ export const GK395Page: FC = () => {
   return (
     <div className="GK395Page">
       <Calc 
-        title={'Расчет процентов по статье 395 ГК РФ'}
+        type={0}
       />
     </div>
   );
