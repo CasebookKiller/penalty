@@ -1,5 +1,8 @@
 
 import * as RU from '../../locale/ru.json';
+import * as compressJSON from 'compress-json';
+
+import * as jsoncrush from 'jsoncrush';
 
 import { dateFromString, getDayOfYear, getDays, doKeyRatesTable } from './functions';
 
@@ -26,27 +29,52 @@ interface CalcProps {
   type?: number; // 0 - 395, 1 - penalty
 }
 
+interface DebtRow {
+  id: number;
+  date: Date;
+  sum: number;
+}
+
+interface ShortDebtRow {
+  d: Date;
+  s: number;
+}
+
+interface CalcData {
+  s: [number | undefined, number, number, number, number];
+  d: [Date | null, Date | null];
+  p: [ShortDebtRow[], ShortDebtRow[]];
+  //type: number | undefined;
+  //debt: number;
+  //currency: number;
+  //rate: number;
+  //periodtype: number;
+  //from: Date | null;
+  //to: Date | null;
+  //debtdecrease: DebtRow[];
+  //debtincrease: DebtRow[];
+}
+
 interface MainTableRow {
   id: number;
   date: Date;
-  debtsumin?: number;
-  increase?: number;
-  decrease?: number;
-  debtsumout?: number; 
+  in?: number;
+  inc?: number;
+  dec?: number;
+  out?: number; 
   percent?: number;
   penalty?: number;
 }
 
 interface ShortTableRow {
-  id: number;
-  startdate: Date;
-  enddate: Date;
-  debtsumin?: number;
-  increase?: number;
-  decrease?: number;
-  debtsumout?: number; 
-  percent?: number;
-  penalty?: number;
+  s: Date;
+  e: Date;
+  i?: number;
+  inc?: number;
+  dec?: number;
+  o?: number; 
+  pcnt?: number;
+  plty?: number;
 }
 
 const debtdecrease = [
@@ -63,12 +91,8 @@ const debtincrease = [
   { id: 3, date: dateFromString('12.04.2025'), sum: 1000 },
 ];
 
-
-
 const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
 console.log(keyratesTable);
-
-
 
 export const Calc: FC<CalcProps> = ({type}) => {
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
@@ -91,21 +115,48 @@ export const Calc: FC<CalcProps> = ({type}) => {
   
   const [sum, setSum] = useState(0);
 
+  function getCalcData(): CalcData {
+    const decrease = DebtDecrease.map((item) => {
+      return {
+        d: item.date,
+        s: item.sum,        
+      }}
+    );
+    const increase = DebtIncrease.map((item) => {
+      return {
+        d: item.date,
+        s: item.sum,        
+      }}
+    );
+
+    return {
+      s: [type, debt, currency, rate, periodtype],
+      d: [datefrom, dateto],
+      p: [decrease, increase],
+    };
+  }
+
   useEffect(() => {
     if (datefrom && dateto) {
       const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
       //setMainTable(newMainTable);
       const newShortTable = doShortTable(newMainTable);
-      console.log(newShortTable);
+      const calcData = getCalcData();
+      console.log(calcData);
+      const compressed = compressJSON.compress(calcData);
+      console.log('compressed: ', compressed);
+      console.log('stringify: ',JSON.stringify(compressed));
+      console.log('length: ', JSON.stringify(compressed).length)
+      console.log('crush: ', jsoncrush.default.crush(JSON.stringify(compressed)));
+      console.log('length: ', jsoncrush.default.crush(JSON.stringify(compressed)).length)
       setRows(newShortTable);
     }
-  }, [debt, datefrom, dateto]);
+  }, [debt, datefrom, dateto, rate, periodtype]);
   
-  interface DebtRow {
-    id: number;
-    date: Date;
-    sum: number;
-  }
+  useEffect(() => {
+    console.log('rate', rate);
+    console.log('periodtype', periodtype);
+  }, [rate, periodtype]);
 
   const currencies = [
     { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
@@ -148,22 +199,21 @@ export const Calc: FC<CalcProps> = ({type}) => {
       
       // проверка на изменение ключевых параметров
       const setNewShortRow = 
-            lastRow?.debtsumin !== row.debtsumin || 
-            lastRow?.debtsumout !== row.debtsumout || 
+            lastRow?.in !== row.in || 
+            lastRow?.out !== row.out || 
             lastRow?.percent !== row.percent;
 
       if (setNewShortRow) {
         //console.log('%cключевые параметры изменились','color: pink');
         currentShortRow = {
-          id: row.id,
-          startdate: row.date,
-          enddate: row.date,
-          debtsumin: row.debtsumin,
-          increase: row.increase,
-          decrease: row.decrease,
-          debtsumout: row.debtsumout,
-          percent: row.percent,
-          penalty: row.penalty  
+          s: row.date,
+          e: row.date,
+          i: row.in,
+          inc: row.inc,
+          dec: row.dec,
+          o: row.out,
+          pcnt: row.percent,
+          plty: row.penalty  
         } as ShortTableRow;
         if (lastShortRow) {
           rows.push(lastShortRow);
@@ -174,17 +224,17 @@ export const Calc: FC<CalcProps> = ({type}) => {
         //console.log('без изменений');
         if (!currentShortRow) return;
         const penalty = row.penalty === undefined ? 0 : row.penalty;
-        const sumPenalty = currentShortRow?.penalty ? currentShortRow?.penalty + penalty : 0 + penalty;
+        const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
         currentShortRow = {
-          id: currentShortRow.id,
-          startdate: currentShortRow.startdate,
-          enddate: row.date,
-          debtsumin: currentShortRow.debtsumin,
-          increase: row.increase,
-          decrease: row.decrease,
-          debtsumout: row.debtsumout,
-          percent: row.percent,
-          penalty: sumPenalty  
+          //id: currentShortRow.id,
+          s: currentShortRow.s,
+          e: row.date,
+          i: currentShortRow.i,
+          inc: row.inc,
+          dec: row.dec,
+          o: row.out,
+          pcnt: row.percent,
+          plty: sumPenalty  
         }
         if (array.length - 1 === index) {
           rows.push(currentShortRow);
@@ -192,8 +242,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
       }
 
       if (currentShortRow === null) currentShortRow = {
-        startdate: row.date,
-        enddate: row.date,
+        s: row.date,
+        e: row.date,
         ...row
       } as ShortTableRow;
 
@@ -211,24 +261,28 @@ export const Calc: FC<CalcProps> = ({type}) => {
     let print = '';
     let sum = 0;
     rows.forEach(row => {
-      const startdate = row.startdate.toLocaleDateString();
-      const enddate = row.enddate.toLocaleDateString();
+      const start = row.s.toLocaleDateString();
+      const end = row.e.toLocaleDateString();
       
       const oneDay = 1000 * 60 * 60 * 24;
       // Вычисление разницы во времени между двумя датами
-      const diffInTime = row.enddate.getTime() - row.startdate.getTime();
+      const diffInTime = row.e.getTime() - row.s.getTime();
       // Вычисление количества дней между двумя датами
       const diffInDays = Math.round(diffInTime / oneDay);
-     
-      const sumin = row.debtsumin;
-      const inc = row.increase;
-      const dec = row.decrease;
-      const sumout = row.debtsumout;
-      const percent = Number(row.percent)/100;
-      const penalty = Number(row.penalty)/100;
+
+      const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+
+      const sumin = row.i;
+      const inc = row.inc;
+      const dec = row.dec;
+      const sumout = row.o;
+      const percent = Number(row.pcnt); // процент в год
+      const percentPerDay = percent / daysInYear;
+      console.log('percentPerDay: ', percentPerDay);
+      const penalty = Number(row.plty)/100;
 
       //const str = `${startdate} - ${enddate} ${sumin} + ${inc} - ${dec} = ${sumout} (${percent}% * ${sumin} * ${diffInDays + 1} = ${penalty.toFixed(4)})\n`;
-      const str2 = `${startdate} - ${enddate} ${sumin?.toString().padStart(9, ' ')} + ${inc?.toString().padStart(9, ' ')} - ${dec?.toString().padStart(9, ' ')} = ${sumout?.toString().padStart(9, ' ')} ${percent?.toString().padStart(3, ' ')}% ${(diffInDays + 1).toString().padStart(3, ' ')} ${penalty.toFixed(2).toString().padStart(9, ' ')}\n`;
+      const str2 = `${start} - ${end} ${sumin?.toString().padStart(9, ' ')} + ${inc?.toString().padStart(9, ' ')} - ${dec?.toString().padStart(9, ' ')} = ${sumout?.toString().padStart(9, ' ')} ${percentPerDay?.toFixed(4).toString().padStart(3, ' ')}% ${(diffInDays + 1).toString().padStart(3, ' ')} ${penalty.toFixed(2).toString().padStart(9, ' ')}\n`;
       print = print + str2;
       sum = sum + penalty;
       if (str2.toString().length > maxLenth) maxLenth = str2.toString().length;
@@ -276,8 +330,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
     let increase = 0;
     let decrease = 0;
     let debtsumout = 0;
-    let percent = 0.00;
-    let penalty = 0;
+//    let percent = 0.00;
+//    let penalty = 0;
     newArray.map((item, index) => {
 
       const indexDate = new Date(from.getFullYear(), from.getMonth(), from.getDate() + index);
@@ -290,8 +344,15 @@ export const Calc: FC<CalcProps> = ({type}) => {
       const currentDayRate = currentRate !== undefined ? periodType === 1 ? currentRate : currentRate / daysInYear : undefined;
       console.log(`currentDayRate: ${currentDayRate?.toFixed(4)}%`);
       // вот здесь нужно подставлять процентную ставку из таблицы ключевых ставок или договорную неустойку
-      const key = !inFuture ? keyratesTable.find(row => row.date === indexDate.toLocaleDateString())?.key : currentKey;
-      //console.log('key: ', key);
+
+      const keyRate = inFuture ?  currentKey : keyratesTable.find(row => row.date === indexDate.toLocaleDateString())?.key;
+      console.log('keyRate: ', keyRate);
+      console.log('currentRate: ', currentRate);
+      console.log('type: ', type);
+      console.log('periodType: ', periodType);
+
+      const percent = type !== 1 ? keyRate : periodType === 1 ? currentRate && (currentRate * daysInYear): currentRate;
+      console.log('percent: ', percent);
 
       if (debtsumout !== debtsumin) {
         debtsumin = debtsumout;
@@ -324,18 +385,19 @@ export const Calc: FC<CalcProps> = ({type}) => {
       const newRow: MainTableRow = {
         id: item,
         date: indexDate,
-        debtsumin: debtsumin,
-        increase: increase,
-        decrease: decrease,
-        debtsumout: debtsumout,
-        percent: key,
-        penalty: key ? (( key / daysInYear ) * (debtsumin+increase)) : 0
+        in: debtsumin,
+        inc: increase,
+        dec: decrease,
+        out: debtsumout,
+        percent: percent,
+        penalty: percent ? (( percent / daysInYear ) * ( debtsumin + increase )) : 0
       }
 
       debtsumin = debtsumout;
       increase = 0;
       decrease = 0;
 
+      /*
       const tempRow = {
         id: item,
         date: newRow.date.toLocaleDateString(),
@@ -346,11 +408,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
         percent: newRow.percent,
         penalty: newRow.penalty
       }
+      */
 
       //console.log('newRow: ', tempRow);
 
       newMainTable.push(newRow);
-    })
+    });
+    console.log('newMainTable: ', newMainTable);
     return newMainTable;
   }
 
@@ -445,31 +509,31 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
   const calcRowTemplate = (Row: ShortTableRow, index: number) => {
     return (
-      <div className="col-12" key={Row.id}>
+      <div className="col-12" key={index}>
         <div className={classNames('flex flex-column xl:flex-row xl:align-items-start p-2 gap-2', { 'border-top-1 surface-border': index !== 0 })}>
           <div className="flex flex-row flex-wrap gap-2">
             <div className="flex align-items-top justify-content-left w-10rem h-1rem font-bold text-900">
-              <div className="inline-block h-rem text-left">{Row.startdate.toLocaleDateString()}</div>
+              <div className="inline-block h-rem text-left">{Row.s.toLocaleDateString()}</div>
               <div className="inline-block h-rem text-center mx-1">-</div>
-              <div className="inline-block h-rem text-right">{Row.enddate.toLocaleDateString()}</div>
+              <div className="inline-block h-rem text-right">{Row.e.toLocaleDateString()}</div>
             </div>
             <div className="flex align-items-top justify-content-center w-12rem h-2rem">
               <div className="flex flex-column xl:flex-row justify-content-between xl:align-items-start flex-1 gap-2">
                 <div className="card-container flex flex-row flex-wrap">
-                  <div className="inline-block h-rem text-left">{Row.debtsumin?.toLocaleString()}</div>
+                  <div className="inline-block h-rem text-left">{Row.i?.toLocaleString()}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">+</div>
-                  <div className="inline-block h-rem">{Row.increase?.toLocaleString()}</div>
+                  <div className="inline-block h-rem">{Row.inc?.toLocaleString()}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">-</div>
-                  <div className="inline-block h-rem text-left">{Row.decrease?.toLocaleString()}</div>
+                  <div className="inline-block h-rem text-left">{Row.dec?.toLocaleString()}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">=</div>
-                  <div className="inline-block h-rem text-left">{Row.debtsumout?.toLocaleString()}</div>
+                  <div className="inline-block h-rem text-left">{Row.o?.toLocaleString()}</div>
                 </div>
                 <div className="card-container flex flex-row flex-wrap">
-                  <div className='inline-block h-rem text-left'>{Math.round((Row.enddate.getTime() - Row.startdate.getTime()) / (1000 * 60 * 60 * 24))+1}</div>
+                  <div className='inline-block h-rem text-left'>{Math.round((Row.e.getTime() - Row.s.getTime()) / (1000 * 60 * 60 * 24))+1}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">*</div>
-                  <div className="inline-block">{Row.percent?.toString()}% / {getDayOfYear(new Date(Row.enddate.getFullYear(), 11, 31))}</div>
+                  <div className="inline-block">{Row.pcnt?.toString()}% / {getDayOfYear(new Date(Row.e.getFullYear(), 11, 31))}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">*</div>
-                  <div className="inline-block">{Row.increase === 0 ? Row.debtsumin?.toLocaleString() : Row.debtsumout?.toLocaleString()}</div>
+                  <div className="inline-block">{Row.inc === 0 ? Row.i?.toLocaleString() : Row.o?.toLocaleString()}</div>
                   <div className="inline-block w-rem h-rem text-left mx-1">=</div>
                 </div>
               </div>
@@ -480,7 +544,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
                   <div className="inline-block w-rem h-rem text-left"></div>
                 </div>
                 <div className="card-container">
-                  <div className="inline-block font-bold app theme-accent-text-color">{Row.penalty && parseFloat(Row.penalty.toFixed(2)).toLocaleString()}</div>
+                  <div className="inline-block font-bold app theme-accent-text-color">{Row.plty && parseFloat(Row.plty.toFixed(2)).toLocaleString()}</div>
                 </div>
               </div>
             </div>  
