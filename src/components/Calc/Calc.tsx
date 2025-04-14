@@ -1,12 +1,19 @@
-
 import * as RU from '../../locale/ru.json';
-import * as compressJSON from 'compress-json';
-
 import * as jsoncrush from 'jsoncrush';
 
 import { dateFromString, getDayOfYear, getDays, doKeyRatesTable } from './functions';
 
 import { FC, useEffect, useState } from 'react';
+
+import { useLaunchParams } from '@telegram-apps/sdk-react';
+
+
+import {
+//  defineEventHandlers,
+  on,
+//  postEvent,
+//  request,
+} from '@telegram-apps/bridge';
 
 import { Panel } from 'primereact/panel';
 import { DataTable } from 'primereact/datatable';
@@ -21,6 +28,10 @@ import { Button } from 'primereact/button';
 import { DataView } from 'primereact/dataview';
 import { classNames } from 'primereact/utils';
 
+import { getCurrencies } from './functions';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { botMethod, PreparedInlineMessage } from '@/api/bot/methods';
+
 //import { segodnya } from './functions';
 addLocale('ru', RU.ru);
 locale('ru');
@@ -33,26 +44,6 @@ interface DebtRow {
   id: number;
   date: Date;
   sum: number;
-}
-
-interface ShortDebtRow {
-  d: Date;
-  s: number;
-}
-
-interface CalcData {
-  s: [number | undefined, number, number, number, number];
-  d: [Date | null, Date | null];
-  p: [ShortDebtRow[], ShortDebtRow[]];
-  //type: number | undefined;
-  //debt: number;
-  //currency: number;
-  //rate: number;
-  //periodtype: number;
-  //from: Date | null;
-  //to: Date | null;
-  //debtdecrease: DebtRow[];
-  //debtincrease: DebtRow[];
 }
 
 interface MainTableRow {
@@ -91,6 +82,12 @@ const debtincrease = [
   { id: 3, date: dateFromString('12.04.2025'), sum: 1000 },
 ];
 
+const currencies = [
+  { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
+  { name: '$', value: 2, text: 'Доллар США', eng: 'USD', rus: 'долл.' },
+  { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
+];
+
 const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
 console.log(keyratesTable);
 
@@ -98,12 +95,15 @@ export const Calc: FC<CalcProps> = ({type}) => {
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
   const [debt, setDebt] = useState<number>(0);
   const [currency, setCurrency] = useState(1); // 1 - RUB, 2 - USD, 3 - EUR
-  const [datefrom, setDateFrom] = useState(null);
-  const [dateto, setDateTo] = useState(null);
+  const [datefrom, setDateFrom] = useState<Date>();
+  const [dateto, setDateTo] = useState<Date>();
   const [numberOfDays, setNumberOfDays] = useState(0);
   const [rate, setRate] = useState(0);
   const [periodtype, setPeriodType] = useState(1); // 1 - День, 2 - Год
-
+  const [USD, setUSD] = useState(0);
+  const [EUR, setEUR] = useState(0);
+  console.log('USD: ', USD);
+  console.log('EUR: ', EUR);
   // Платежи в погашение долга
   const [DebtDecrease, setDebtDecrease] = useState<DebtRow[]>(debtdecrease);
 
@@ -115,25 +115,57 @@ export const Calc: FC<CalcProps> = ({type}) => {
   
   const [sum, setSum] = useState(0);
 
-  function getCalcData(): CalcData {
+  const [crushedData, setCrushedData] = useState<string>('');
+
+  // Define Mini Apps event handlers to receive 
+  // events from the Telegram native application.
+  // defineEventHandlers();
+
+  const LP = useLaunchParams();
+  const ID = LP.initData;
+  console.log('ID: ', ID?.user?.id);
+
+
+  function doCalcData(): [
+        [number | undefined, number, number, number, number],
+        [number, number],
+        [Array<[number, number]>, Array<[number, number]>]
+  ] {
     const decrease = DebtDecrease.map((item) => {
-      return {
-        d: item.date,
-        s: item.sum,        
-      }}
+        const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
+        return result;
+      }
     );
     const increase = DebtIncrease.map((item) => {
-      return {
-        d: item.date,
-        s: item.sum,        
-      }}
-    );
+      const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
+        return result;
+}    );
 
-    return {
-      s: [type, debt, currency, rate, periodtype],
-      d: [datefrom, dateto],
-      p: [decrease, increase],
-    };
+    const from = datefrom !== undefined ? Number(datefrom.toLocaleDateString().replace('.','').replace('.','')) : 0;
+    const to = dateto !== undefined ? Number(dateto.toLocaleDateString().replace('.','').replace('.','')) : 0;
+
+    return  [
+              [type, debt, currency, rate, periodtype],
+              [from, to],
+              [decrease, increase]
+            ];
+  }
+
+
+  // Сжатие параметров расчёта для url
+  function crushedCalcData() {
+    const calcData = doCalcData();
+    const crushed = jsoncrush.default.crush(JSON.stringify(calcData));
+    setCrushedData(crushed);
+    console.log('crushed length: ', crushed.length);
+    return crushed;
+  }
+
+  // Получение параметров расчёта из url
+  function uncrushedCalcData(crushed?: string) {
+    const uncrushed = crushed !== undefined ? JSON.parse(jsoncrush.default.uncrush(crushed)) : crushedData;
+    console.log('uncrushed: %o', uncrushed);
+    return uncrushed;
   }
 
   useEffect(() => {
@@ -141,15 +173,50 @@ export const Calc: FC<CalcProps> = ({type}) => {
       const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
       //setMainTable(newMainTable);
       const newShortTable = doShortTable(newMainTable);
-      const calcData = getCalcData();
+      const calcData = doCalcData();
       console.log(calcData);
-      const compressed = compressJSON.compress(calcData);
-      console.log('compressed: ', compressed);
-      console.log('stringify: ',JSON.stringify(compressed));
-      console.log('length: ', JSON.stringify(compressed).length)
-      console.log('crush: ', jsoncrush.default.crush(JSON.stringify(compressed)));
-      console.log('length: ', jsoncrush.default.crush(JSON.stringify(compressed)).length)
+      console.log('crushedCalcData: ', crushedCalcData());
+      uncrushedCalcData(crushedCalcData()); // удалить после тестирования
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun("Hello World"),
+                  new TextRun({
+                      text: "Foo Bar",
+                      bold: true,
+                  }),
+                  new TextRun({
+                      text: "\tGithub is the best",
+                      bold: true,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      
+      // Used to export the file into a blob
+      Packer.toBlob(doc).then((blob) => {
+        let dataURL = URL.createObjectURL(blob);
+        console.log(dataURL);
+      });
+    
+
       setRows(newShortTable);
+
+      getCurrencies().then((result)=>{
+        // устанавливаем курс доллара и евро
+        setUSD(result.USD);
+        setEUR(result.EUR);
+        console.log(result);
+      });
+      
     }
   }, [debt, datefrom, dateto, rate, periodtype]);
   
@@ -158,11 +225,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
     console.log('periodtype', periodtype);
   }, [rate, periodtype]);
 
-  const currencies = [
-    { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
-    { name: '$', value: 2, text: 'Доллар США', eng: 'USD', rus: 'долл.' },
-    { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
-  ];
 
   const periodtypes = [
     {
@@ -186,7 +248,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
     
     let currentShortRow: ShortTableRow | null = null; // текущая строка
     let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-    let lastRow: MainTableRow | null = null; // предыдущая строка главной тааблицы
+    let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+    let lastDaysInYear = 365; // количество дней в году
 
     let rows: ShortTableRow[] = [];
 
@@ -196,12 +259,14 @@ export const Calc: FC<CalcProps> = ({type}) => {
       //console.log('%crow: ', 'color: cyan', row);
       //console.log(row.penalty);
       //if (!lastShortRow) console.log(lastShortRow);
-      
+      const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+
       // проверка на изменение ключевых параметров
       const setNewShortRow = 
             lastRow?.in !== row.in || 
             lastRow?.out !== row.out || 
-            lastRow?.percent !== row.percent;
+            lastRow?.percent !== row.percent ||
+            lastDaysInYear !== daysInYear; // проверка на изменение дней в году
 
       if (setNewShortRow) {
         //console.log('%cключевые параметры изменились','color: pink');
@@ -224,6 +289,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
         //console.log('без изменений');
         if (!currentShortRow) return;
         const penalty = row.penalty === undefined ? 0 : row.penalty;
+        //console.log('penalty: ', penalty);
         const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
         currentShortRow = {
           //id: currentShortRow.id,
@@ -250,6 +316,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
       lastShortRow = currentShortRow;
       // после проверки текущий ряд сохраняем в переменную
       lastRow = row;
+      lastDaysInYear = daysInYear;
       //console.log('row: ', row);
     
     });
@@ -279,7 +346,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
       const percent = Number(row.pcnt); // процент в год
       const percentPerDay = percent / daysInYear;
       console.log('percentPerDay: ', percentPerDay);
-      const penalty = Number(row.plty)/100;
+      const penalty = Number(row.plty);
 
       //const str = `${startdate} - ${enddate} ${sumin} + ${inc} - ${dec} = ${sumout} (${percent}% * ${sumin} * ${diffInDays + 1} = ${penalty.toFixed(4)})\n`;
       const str2 = `${start} - ${end} ${sumin?.toString().padStart(9, ' ')} + ${inc?.toString().padStart(9, ' ')} - ${dec?.toString().padStart(9, ' ')} = ${sumout?.toString().padStart(9, ' ')} ${percentPerDay?.toFixed(4).toString().padStart(3, ' ')}% ${(diffInDays + 1).toString().padStart(3, ' ')} ${penalty.toFixed(2).toString().padStart(9, ' ')}\n`;
@@ -321,10 +388,10 @@ export const Calc: FC<CalcProps> = ({type}) => {
     const currentKey = keyratesTable.find(row => row.date === new Date().toLocaleDateString())?.key;
     const currentRate = type !==1 ? currentKey : rate;
 
-    console.log('currentKey: ', currentKey);
-    console.log('currentRate: ', currentRate);
-    console.log('periodType: ', periodType);
-    console.log('periodText: ', periodtypes.filter(obj => obj.value === periodType)[0].name);
+    //console.log('currentKey: ', currentKey);
+    //console.log('currentRate: ', currentRate);
+    //console.log('periodType: ', periodType);
+    //console.log('periodText: ', periodtypes.filter(obj => obj.value === periodType)[0].name);
 
     let debtsumin = 0;
     let increase = 0;
@@ -341,18 +408,18 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
       const inFuture = indexDate > currentDate;
       //inFuture && console.log('Будущее наступило...');
-      const currentDayRate = currentRate !== undefined ? periodType === 1 ? currentRate : currentRate / daysInYear : undefined;
-      console.log(`currentDayRate: ${currentDayRate?.toFixed(4)}%`);
+      ////const currentDayRate = currentRate !== undefined ? periodType === 1 ? currentRate : currentRate / daysInYear : undefined;
+      ////console.log(`currentDayRate: ${currentDayRate?.toFixed(4)}%`);
       // вот здесь нужно подставлять процентную ставку из таблицы ключевых ставок или договорную неустойку
 
       const keyRate = inFuture ?  currentKey : keyratesTable.find(row => row.date === indexDate.toLocaleDateString())?.key;
-      console.log('keyRate: ', keyRate);
-      console.log('currentRate: ', currentRate);
-      console.log('type: ', type);
-      console.log('periodType: ', periodType);
+      //console.log('keyRate: ', keyRate);
+      //console.log('currentRate: ', currentRate);
+      //console.log('type: ', type);
+      //console.log('periodType: ', periodType);
 
       const percent = type !== 1 ? keyRate : periodType === 1 ? currentRate && (currentRate * daysInYear): currentRate;
-      console.log('percent: ', percent);
+      //console.log('percent: ', percent);
 
       if (debtsumout !== debtsumin) {
         debtsumin = debtsumout;
@@ -390,27 +457,14 @@ export const Calc: FC<CalcProps> = ({type}) => {
         dec: decrease,
         out: debtsumout,
         percent: percent,
-        penalty: percent ? (( percent / daysInYear ) * ( debtsumin + increase )) : 0
+        penalty: percent ? (( (percent/100) / daysInYear ) * ( debtsumin + increase )) : 0
       }
 
       debtsumin = debtsumout;
       increase = 0;
       decrease = 0;
 
-      /*
-      const tempRow = {
-        id: item,
-        date: newRow.date.toLocaleDateString(),
-        debtsumin: newRow.debtsumin,
-        increase: newRow.increase,
-        decrease: newRow.decrease,
-        debtsumout: newRow.debtsumout,
-        percent: newRow.percent,
-        penalty: newRow.penalty
-      }
-      */
-
-      //console.log('newRow: ', tempRow);
+      //console.log('newRow: ', newRow);
 
       newMainTable.push(newRow);
     });
@@ -508,6 +562,9 @@ export const Calc: FC<CalcProps> = ({type}) => {
   */
 
   const calcRowTemplate = (Row: ShortTableRow, index: number) => {
+    // В расчёте необходима проверка для перехода года на следующий год
+    // При создании maintable надо проверять год на високосный год
+    //console.log('Row: ', Row);
     return (
       <div className="col-12" key={index}>
         <div className={classNames('flex flex-column xl:flex-row xl:align-items-start p-2 gap-2', { 'border-top-1 surface-border': index !== 0 })}>
@@ -529,11 +586,25 @@ export const Calc: FC<CalcProps> = ({type}) => {
                   <div className="inline-block h-rem text-left">{Row.o?.toLocaleString()}</div>
                 </div>
                 <div className="card-container flex flex-row flex-wrap">
-                  <div className='inline-block h-rem text-left'>{Math.round((Row.e.getTime() - Row.s.getTime()) / (1000 * 60 * 60 * 24))+1}</div>
+                  <div className='inline-block h-rem text-left'>
+                    {
+                      Math.round((Row.e.getTime() - Row.s.getTime()) / (1000 * 60 * 60 * 24))+1
+                    }
+                  </div>
                   <div className="inline-block w-rem h-rem text-left mx-1">*</div>
-                  <div className="inline-block">{Row.pcnt?.toString()}% / {getDayOfYear(new Date(Row.e.getFullYear(), 11, 31))}</div>
+                  <div className="inline-block">
+                    {
+                      periodtype === 2 ? 
+                        Row.pcnt?.toFixed(2) + ' % / ' + getDayOfYear(new Date(Row.e.getFullYear(), 11, 31)):
+                        Row.pcnt !== undefined && (Row.pcnt / getDayOfYear(new Date(Row.e.getFullYear(), 11, 31))).toFixed(4) + ' %'
+                    }
+                  </div>
                   <div className="inline-block w-rem h-rem text-left mx-1">*</div>
-                  <div className="inline-block">{Row.inc === 0 ? Row.i?.toLocaleString() : Row.o?.toLocaleString()}</div>
+                  <div className="inline-block">
+                    {
+                      Row.inc === 0 ? Row.i?.toLocaleString() : Row.o?.toLocaleString()
+                    }
+                  </div>
                   <div className="inline-block w-rem h-rem text-left mx-1">=</div>
                 </div>
               </div>
@@ -544,7 +615,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
                   <div className="inline-block w-rem h-rem text-left"></div>
                 </div>
                 <div className="card-container">
-                  <div className="inline-block font-bold app theme-accent-text-color">{Row.plty && parseFloat(Row.plty.toFixed(2)).toLocaleString()}</div>
+                  <div className="inline-block font-bold app theme-accent-text-color">
+                    {
+                      periodtype === 2 ?
+                        Row.plty && Row.plty.toLocaleString():
+                        Row.plty && Number(Row.plty.toFixed(2)).toLocaleString()
+                    }
+                    </div>
                 </div>
               </div>
             </div>  
@@ -604,7 +681,11 @@ export const Calc: FC<CalcProps> = ({type}) => {
         <div className="flex flex-column xxl:flex-row xxl:align-items-start gap-2">
           <div className="flex flex-row flex-wrap gap-2">
             <div className="flex align-items-top justify-content-left font-bold text-700">
-              <div className="inline-block h-rem text-left app theme-accent-text-color">Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()}</div>
+              <div
+                className="inline-block h-rem text-left app theme-accent-text-color"
+              >
+                Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()} {currencies.filter(c => c.value === currency)[0]?.name}
+              </div>
             </div>
           </div>
         </div>
@@ -815,7 +896,92 @@ export const Calc: FC<CalcProps> = ({type}) => {
         <AppSection
           header={'Заголовок 2'}
           subheader={'Подзаголовок 2'}
-          body={'Текст 2'}
+          body={
+            <div style={{width: '100%'}} className='flex justify-content-start'>
+                <Button
+                  className='btntest mt-2'
+                  onClick={
+                    () => {
+                      const result= {
+                        type: 'article',
+                        id: 1,
+                        title: 'RESULT 1',
+                        description: 'TEXT_1',
+                        input_message_content: {
+                          'message_text': 'TEXT 1'
+                        }
+                      }           
+                       
+                      console.log('test');
+                      
+                      //interface FormData {
+                      //  yoo: typeof FormData.prototype.append;
+                      //}
+
+                      
+                      //FormData.prototype.yoo = FormData.prototype.append;
+
+                      const FD = new FormData();
+                      
+                      
+                      //FormData.prototype.add = FormData.prototype.append;
+                      
+                      
+                      //console.log('id: ', ID?.user?.id);
+                      FD.append('user_id', ID?.user?.id.toString() || '');
+                      FD.append('result', JSON.stringify(result));
+                      FD.append('allow_user_chats', 'true');
+                      FD.append('allow_bot_chats', 'true');
+                      FD.append('allow_group_chats', 'true');
+                      FD.append('allow_channel_chats', 'true');
+                      // web_app_send_prepared_message
+                      botMethod(
+                        'savePreparedInlineMessage',
+                        FD
+                      ).then((result: any) => {
+                        
+
+                        window.addEventListener('message', ({ data }) => {
+                          //const { eventType, eventData } = JSON.parse(data);
+                          console.log(data);
+                        });
+                                                
+
+                        console.log(result);
+                        //console.log(result.payload?.result?.status);
+                        const PIM: PreparedInlineMessage = result.payload?.result;
+                        console.log(PIM);
+                        const D = new FormData();
+                        D.append('inline_message_id', PIM.id.toString());
+                        //console.log(`window: `, window);
+                        //botMethod('SentWebAppMessage', D);
+                        if ('TelegramWebviewProxy' in window) {
+                          const { TelegramWebviewProxy } = window;
+                          if (TelegramWebviewProxy) { 
+                            const TWP = TelegramWebviewProxy;
+                            if (TWP && typeof(TWP) === 'object') {
+                              if ('postEvent' in TWP) {
+                                const { postEvent } = TWP;
+                                if (typeof(postEvent) === 'function') {
+                                  postEvent('web_app_send_prepared_message', {id: PIM.id});
+                                }
+                              }
+                            }
+                          }
+                        } 
+                                    
+                      }).catch((error) => {
+                        console.log(error);
+                                
+                      });
+
+                    }
+                  }
+                >
+                  Тест отправки
+                </Button>
+            </div>
+          }
           subheaderNoWrap
         />
       </Panel>

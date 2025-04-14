@@ -1,3 +1,8 @@
+export interface PreparedInlineMessage {
+  id: number;
+  expiration_date: number;
+}
+
 /**
  * Sends a POST request to the specified Telegram Bot API method with the provided request body.
  *
@@ -33,6 +38,23 @@ export function fetchBot(
   .catch(error => {
     onError({ status: 'error', error });
   });
+}
+
+export function fetchBotJSON(
+  method: string,
+  request: any,
+  onSuccess: (data: any) => void,
+  onError: (error: any) => void
+) {
+  console.log('method: ', method);
+  console.log('request: ', request);
+
+  fetch(`https://api.telegram.org/bot${import.meta.env.VITE_BOT_TOKEN}/${method}`, {
+    method: 'POST',
+    body: request
+  }).then(response => response.json())
+  .then(response => onSuccess({ status: 'done', payload: response }))
+  .catch(error => onError({ status: 'error', error }));
 }
 
 export function fetchBotFormData(

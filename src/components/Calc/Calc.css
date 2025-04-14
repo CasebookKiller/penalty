@@ -190,6 +190,14 @@ td[data-pc-name="datatable"] {
   padding-right: 0.75rem;
 }
 
+.btntest {
+  color: var(--tg-theme-section-bg-color);
+  background: var(--tg-theme-accent-text-color);
+  border: 1px solid var(--tg-theme-accent-text-color);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
 .numberOfDays {
   max-width: 64px;
 }
