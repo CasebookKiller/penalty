@@ -11,6 +11,7 @@ import { useLaunchParams } from '@telegram-apps/sdk-react';
 import {
 //  defineEventHandlers,
   on,
+  postEvent,
 //  postEvent,
 //  request,
 } from '@telegram-apps/bridge';
@@ -953,6 +954,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
                         console.log(PIM);
                         const D = new FormData();
                         D.append('inline_message_id', PIM.id.toString());
+                        
                         //console.log(`window: `, window);
                         //botMethod('SentWebAppMessage', D);
                         if ('TelegramWebviewProxy' in window) {
