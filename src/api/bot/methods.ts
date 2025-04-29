@@ -143,7 +143,6 @@ reply_markup                InlineKeyboardMarkup or
                             ForceReply              Optional    Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
 */
 
-
 /**
  * Use this method to send text messages. On success, the sent Message is returned.
  * @param {string} request The JSON stringified request body.
@@ -215,6 +214,37 @@ export function sendPhoto(
   });
 }
 
+/*
+sendAudio
+---------
+Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
+
+For sending voice messages, use the sendVoice method instead.
+
+Parameter                   Type                    Required    Description
+---------------------------------------------------------------------------
+business_connection_id      String                  Optional    Unique identifier of the business connection on behalf of which the message will be sent
+chat_id                     Integer or String       Yes         Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+message_thread_id           Integer                 Optional    Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+audio                       InputFile or String     Yes         Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an audio file from the Internet, or upload a new one using multipart/form-data. More information on Sending Files »
+caption                     String                  Optional    Audio caption, 0-1024 characters after entities parsing
+parse_mode                  String                  Optional    Mode for parsing entities in the audio caption. See formatting options for more details.
+caption_entities            Array of MessageEntity  Optional    A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+duration                    Integer                 Optional    Duration of the audio in seconds
+performer                   String                  Optional    Performer
+title                       String                  Optional    Track name
+thumbnail                   InputFile or String     Optional    Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More information on Sending Files »
+disable_notification        Boolean                 Optional    Sends the message silently. Users will receive a notification with no sound.
+protect_content             Boolean                 Optional    Protects the contents of the sent message from forwarding and saving
+allow_paid_broadcast        Boolean                 Optional    Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+message_effect_id           String                  Optional    Unique identifier of the message effect to be added to the message; for private chats only
+reply_parameters            ReplyParameters         Optional    Description of the message to reply to
+reply_markup                InlineKeyboardMarkup or
+                            ReplyKeyboardMarkup or
+                            ReplyKeyboardRemove or
+                            ForceReply              Optional    Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
+*/
+
 
 /*
 savePreparedInlineMessage
@@ -228,7 +258,31 @@ allow_user_chats            Boolean                 Optional    Pass True if the
 allow_bot_chats             Boolean                 Optional    Pass True if the message can be sent to private chats with bots
 allow_group_chats           Boolean                 Optional    Pass True if the message can be sent to group and supergroup chats
 allow_channel_chats         Boolean                 Optional    Pass True if the message can be sent to channel chats
+*/
 
+/**
+ * Use this method to save prepared inline messages. On success, the PreparedInlineMessage is returned.
+ * @param {string} request The JSON stringified request body.
+ * @return {Promise} A Promise that resolves with the response, or rejects with any error. 
+ */
+export function savePreparedInlineMessage(
+  request: string
+) {
+  return new Promise(function (resolve, reject) {
+    fetchBot(
+      'savePreparedInlineMessage',
+      request,
+      function (result) {
+        resolve(result)
+      },
+      function (error) {
+        reject(error)
+      }
+    );
+  });
+}
+
+/*
 PreparedInlineMessage
 ---------------------
 Describes an inline message to be sent by a user of a Mini App.

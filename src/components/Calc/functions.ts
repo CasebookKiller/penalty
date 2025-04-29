@@ -1,5 +1,12 @@
+console.log('Загружен модуль с функциями...')
 import * as keyrates from '../../components/Calc/keyrates.json';
-console.log(keyrates);
+//console.log(keyrates);
+
+//import { init, themeParams, miniApp } from '@telegram-apps/sdk-react';
+
+//init(); console.log('init');
+//themeParams.mountSync(); console.log('themeParams');
+//miniApp.mountSync(); console.log('miniApp');
 
 import  { parse } from 'date-fns'; // https://date-fns.org/
 

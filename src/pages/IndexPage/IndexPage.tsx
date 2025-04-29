@@ -11,11 +11,17 @@ import { Link } from '@/components/Link/Link.tsx';
 import './IndexPage.css';
 
 import tonSvg from './ton.svg';
-import { useLaunchParams } from '@telegram-apps/sdk-react';
-
+import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
+//import { useLocation } from 'react-router-dom';
 
 export const IndexPage: FC = () => {
-  const ID = useLaunchParams().initData;
+  //const location = useLocation();
+  const LP = retrieveLaunchParams();
+  console.log('LaunchParams: ', LP);
+  const tgWebAppData = LP?.tgWebAppData;
+  const ID = tgWebAppData;
+    
+  //const ID = useLaunchParams().initData;
 
   const [userId] = useState<string>(ID?.user?.id.toString() || '');
   
@@ -27,6 +33,7 @@ export const IndexPage: FC = () => {
         header={'Особенности'}
         footer={'Вы можете воспользоваться этими страницами, чтобы узнать больше о функциях, предоставляемых мини-приложениями Telegram и другими полезными проектами'}
       >
+        {/*<div>{"==="+location.pathname+'==='}</div>*/}
         <Link to='/ton-connect'>
           <div className='flex flex-wrap app p-2 align-items-center gap-4'>
             <img

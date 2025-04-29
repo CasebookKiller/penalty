@@ -1,16 +1,17 @@
 import {
-  shareURL,
-  popup,
-  mainButton,
+  //shareURL,
+  //popup,
+  //mainButton,
   backButton,
 //  useLaunchParams,
-  miniApp,
-  themeParams,
-  viewport,
-  init,
+//  miniApp,
+//  themeParams,
+//  viewport,
+//  init,
+  retrieveLaunchParams
 } from '@telegram-apps/sdk-react';
 import { type FC,
-  startTransition,
+//  startTransition,
   useEffect,
 //  useMemo
 } from 'react';
@@ -31,6 +32,8 @@ function BackButtonManipulator() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  //if (!backButton.isMounted()) backButton.mount();
+
   useEffect(() => {
     function onClick() {
       navigate(-1);
@@ -42,17 +45,33 @@ function BackButtonManipulator() {
 
   useEffect(() => {
     console.log('location.pathname: ', location.pathname);
-    if (location.pathname === '/' || location.pathname === '/poshlina-dev/') {
-      backButton.isVisible() && backButton.hide();
-    } else {
-      !backButton.isVisible() && backButton.show();
-    }
-  }, [location]);
+    if (backButton.isSupported() && !backButton.isMounted()) backButton.mount();
 
+    if (location.pathname === '/' ) {
+      if (backButton.isSupported() && backButton.isMounted()) backButton.hide();
+    } else {
+      if (backButton.isSupported() && backButton.isMounted()) backButton.show();
+    }
+
+    //if (location.pathname === '/' || location.pathname === '/penalty/' ) {
+      //if (!backButton.isMounted()) backButton.mount();
+
+    //  if (backButton.isSupported() && backButton.isMounted()) {
+    //    !backButton.isVisible() && backButton.hide();
+    //  }
+    //} else {
+    //  if (!backButton.isMounted()) backButton.mount();
+
+    //  if (backButton.isSupported() && backButton.isMounted()) {
+    //    !backButton.isVisible() && backButton.show();
+    //  }
+    //}
+  }, [location]);
   
   return null;
 }
 
+/*
 function MainButtonManipulator() {
   
   const location = useLocation();
@@ -114,23 +133,24 @@ function MainButtonManipulator() {
   return null;
   
 }
+*/
 
 export const App: FC = () => {
-  init();
-  //const lp = useLaunchParams();
-  
-  miniApp.mount();
-  
-  themeParams.mount();
-  if (!themeParams.isCssVarsBound()) themeParams.bindCssVars();
+  const lp = retrieveLaunchParams();
+  console.log('lp', lp);
 
-  viewport.mount();
+  //startTransition(() => {
+  //  console.log('%cminiApp: %o', `color: cyan`, miniApp);
+  //});
 
-  backButton.mount();
-  
-  startTransition(() => {
-    console.log('%cminiApp: %o', `color: cyan`, miniApp);
-  });
+  useEffect(() => {
+    
+    //if (!themeParams.isMounted()) themeParams.mount();
+    //if (!themeParams.isCssVarsBound()) themeParams.bindCssVars();
+    //if (!viewport.isMounted()) viewport.mount();
+    //if (!backButton.isMounted()) backButton.mount();
+
+  }, []);
 
   const penalty: AppRoute = { path: '/penalty', element: <PenaltyPage/>, title: 'Расчёт неустойки' };
   const gk395: AppRoute = { path: '/gk395', element: <GK395Page/>, title: 'Расчёт процентов по ст.395 ГК РФ' };
@@ -142,10 +162,13 @@ export const App: FC = () => {
     <>
       <HashRouter>
         <BackButtonManipulator/>
-        <MainButtonManipulator/>
+        {/*<MainButtonManipulator/>*/}
         <Routes>
-          {routes.map((route) => <Route key={route.path} {...route} />)}
-          <Route path='*' element={<Navigate to='/'/>}/>
+          {routes.map((route) => {
+            console.log('Route: ', route);
+            return (<Route key={route.path} {...route} />);
+          })}
+          <Route path='*' element={<Navigate to={'/'}/>}/>
         </Routes>
       </HashRouter>
     </>

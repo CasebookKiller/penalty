@@ -1,20 +1,74 @@
 import * as RU from '../../locale/ru.json';
 import * as jsoncrush from 'jsoncrush';
 
+//https://pdfme.com/docs/getting-started
+
 import { dateFromString, getDayOfYear, getDays, doKeyRatesTable } from './functions';
 
 import { FC, useEffect, useState } from 'react';
 
-import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { Template, BLANK_A4_PDF } from '@pdfme/common';
+//import { text, barcodes, image } from '@pdfme/schemas';
+import { generate } from '@pdfme/generator';
 
+const template: Template = {
+  basePdf: BLANK_A4_PDF,
+  schemas: [
+    [
+      {
+        name: 'example_text_1',
+        type: 'text',
+        position: { x: 10, y: 10 },
+        width: 30,
+        height: 10,
+      },
+      {
+        name: 'example_text_2',
+        type: 'text',
+        position: { x: 45, y: 10 },
+        width: 30,
+        height: 10,
+      },
+      {
+        name: 'example_text_3',
+        type: 'text',
+        position: { x: 80, y: 10 },
+        width: 40,
+        height: 10,
+      },
+    ],
+  ],
+};
 
-import {
-//  defineEventHandlers,
-  on,
-  postEvent,
-//  postEvent,
-//  request,
-} from '@telegram-apps/bridge';
+//const multiVariableText = {}
+
+/*
+const plugins = {
+  Text: multiVariableText,
+  //'QR Code': barcodes.qrcode,
+  //Image: image,
+ // MyCustomPlugin: myCustomPlugin,
+};
+*/
+
+const inputs = [
+  {
+    example_text_1: 'Привет, Мир!',
+    example_text_2: 'Йахуууу...',
+    example_text_3: 'Привет, Мистер Попс!',
+    //example_image: 'data:image/png;base64,iVBORw0KG....',
+    //example_qr_code: 'https://pdfme.com/',
+  },
+];
+
+import { 
+  //useLaunchParams,
+  retrieveLaunchParams,
+  //retrieveRawInitData,
+  //type User
+} from '@telegram-apps/sdk-react';
+
+import { postEvent, on } from '@telegram-apps/bridge';
 
 import { Panel } from 'primereact/panel';
 import { DataTable } from 'primereact/datatable';
@@ -89,10 +143,23 @@ const currencies = [
   { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
 ];
 
-const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
-console.log(keyratesTable);
-
 export const Calc: FC<CalcProps> = ({type}) => {
+  /*
+  const pdf_content = { content: "<h1>Welcome to html-pdf-node-ts</h1>" };
+  html_to_pdf.generatePdf(pdf_content, {
+    format: 'A4',
+     // or A3, A2, A1, Letter, Legal, Tabloid
+  }).then((pdf_buffer)=>{
+    console.log(pdf_buffer);
+  });
+  */
+
+  generate({ template, inputs }).then((pdf) => {
+    const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+    window.open(URL.createObjectURL(blob));
+    console.log('PDF: ', pdf);
+  });
+  
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
   const [debt, setDebt] = useState<number>(0);
   const [currency, setCurrency] = useState(1); // 1 - RUB, 2 - USD, 3 - EUR
@@ -118,12 +185,20 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
   const [crushedData, setCrushedData] = useState<string>('');
 
+  const [eventStatus, setEventStatus] = useState<string>(''); // Статусы события
+
   // Define Mini Apps event handlers to receive 
   // events from the Telegram native application.
   // defineEventHandlers();
 
-  const LP = useLaunchParams();
-  const ID = LP.initData;
+  const LP = retrieveLaunchParams();
+  console.log('LaunchParams: ', LP);
+  const tgWebAppData = LP?.tgWebAppData;
+  const ID = tgWebAppData;
+  //const IDRaw = retrieveRawInitData();
+
+  //const LP = useLaunchParams();
+  //const ID = LP.initData;
   console.log('ID: ', ID?.user?.id);
 
 
@@ -380,7 +455,10 @@ export const Calc: FC<CalcProps> = ({type}) => {
   ) {
     console.log('type: ', type !==1 ? 'Расчёт процентов по ст.395 ГК РФ': 'Расчёт договорной неустойки');
     console.log('rate: ', rate );
-    
+        
+    const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
+    console.log(keyratesTable);
+
     const newMainTable: MainTableRow[] = [];
     const n = getDays(from, to);
     const newArray = new Array(n).fill(null).map((_, i) => i + 1);
@@ -906,10 +984,11 @@ export const Calc: FC<CalcProps> = ({type}) => {
                       const result= {
                         type: 'article',
                         id: 1,
-                        title: 'RESULT 1',
-                        description: 'TEXT_1',
+                        title: 'Заголовок 1',
+                        description: 'Описание 1',
+                        caption: 'Подпись 1',
                         input_message_content: {
-                          'message_text': 'TEXT 1'
+                          'message_text': 'А это текст сообщения 1'
                         }
                       }           
                        
@@ -951,37 +1030,107 @@ export const Calc: FC<CalcProps> = ({type}) => {
                         console.log(result);
                         //console.log(result.payload?.result?.status);
                         const PIM: PreparedInlineMessage = result.payload?.result;
-                        console.log(PIM);
-                        const D = new FormData();
-                        D.append('inline_message_id', PIM.id.toString());
+                        console.log(PIM.id);
+                        //const D = new FormData();
+                        //D.append('inline_message_id', PIM.id.toString());
                         
                         //console.log(`window: `, window);
                         //botMethod('SentWebAppMessage', D);
-                        if ('TelegramWebviewProxy' in window) {
-                          const { TelegramWebviewProxy } = window;
-                          if (TelegramWebviewProxy) { 
-                            const TWP = TelegramWebviewProxy;
-                            if (TWP && typeof(TWP) === 'object') {
-                              if ('postEvent' in TWP) {
-                                const { postEvent } = TWP;
-                                if (typeof(postEvent) === 'function') {
-                                  postEvent('web_app_send_prepared_message', {id: PIM.id});
-                                }
-                              }
-                            }
-                          }
-                        } 
+                        postEvent('web_app_send_prepared_message', {id: PIM.id.toString()});
+                        on('prepared_message_sent', (data) => { console.log(data); setEventStatus(String(data)); });
+                        on('prepared_message_failed', (data) => { console.log(data); setEventStatus(String(data)); });
+                        
+                      
                                     
                       }).catch((error) => {
                         console.log(error);
                                 
                       });
+                      /*
+                      //your bot token placed here
+                      const token = "";
+                      tgmsg('answerInlineQuery', {
+
+                          "inline_query_id": update['inline_query']['id'],
+                          "results": JSON.stringify([
+                              //inline result of an article with thumbnail photo
+                              {
+                                  "type": "article",
+                                  "id": "1",
+                                  "title": "chek inline keybord ",
+                                  "description": "test ",
+                                  "caption": "caption",
+                                  "input_message_content": {
+                                      "message_text": "you can share inline keyboard to other chat"
+                                  },
+
+                                  "thumb_url": "https://avatars2.githubusercontent.com/u/10547598?v=3&s=88"
+                              },
+                              //inline result of an article with inline keyboard
+                              {
+                                  id: "nchfjdfgd",
+                                  title: 'title',
+                                  description: "description",
+                                  type: 'article',
+                                  input_message_content: {
+                                      message_text: "inline is enabled input_message_content: {message_text: message_text}message_text"
+                                  },
+                                  reply_markup: {
+                                      "inline_keyboard": [
+                                          [{
+                                              "text": "InlineFeatures.",
+                                              "callback_data": "inline_plugs_1118095942"
+                                          }],
+                                          [{
+                                              "text": "OtherFeatures.",
+                                              "callback_data": "other_plugs_1118095942"
+                                          }]
+                                      ]
+                                  }
+                              },
+
+                              //inline result of a cached telegram document with inline keyboard
+                              {
+                                  id: "nchgffjdfgd",
+                                  title: 'title',
+                                  description: "description",
+                                  //change this on with the value of file_id from telegram bot api 
+                                  document_file_id: "BQACAgQAAxkBAAIBX2CPrD3yFC0X1sI0HFTxgul0GdqhAALjDwACR4pxUKIV48XlktQNHwQ",
+                                  type: 'document',
+                                  caption: "caption ghh hhdd",
+                                  reply_markup: {
+                                      "inline_keyboard": [
+                                          [{
+                                              "text": "InlineFeatures.",
+                                              "callback_data": "inline_plugs_1118095942"
+                                          }],
+                                          [{
+                                              "text": "OtherFeatures.",
+                                              "callback_data": "other_plugs_1118095942"
+                                          }]
+                                      ]
+                                  }
+
+                              }
+                          ])
+                      })
+
+                      function tgmsg(method, data) {
+                          var options = {
+                              'method': 'post',
+                              'contentType': 'application/json',
+                              'payload': JSON.stringify(data)
+                          };
+                          var responselk = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/' + method, options);
+                      }
+    */
 
                     }
                   }
                 >
                   Тест отправки
                 </Button>
+                <span>{ eventStatus }</span>
             </div>
           }
           subheaderNoWrap

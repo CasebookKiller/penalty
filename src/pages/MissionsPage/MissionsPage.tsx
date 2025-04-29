@@ -1,6 +1,6 @@
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
-import { openTelegramLink, shareURL, useLaunchParams } from '@telegram-apps/sdk-react';
+import { openTelegramLink, shareURL, retrieveLaunchParams } from '@telegram-apps/sdk-react';
 
 import { Button as AntButton, ButtonRef as AntButtonRef } from 'antd-mobile';
 
@@ -32,8 +32,9 @@ interface Mission {
 }
 
 export const MissionsPage: FC = () => {
-  const LP = useLaunchParams();
-  const ID = LP.initData;
+  const LP = retrieveLaunchParams();
+  const tgWebAppData = LP?.tgWebAppData;
+  const ID = tgWebAppData;
 
   const refs = useRef<AntButtonRef[]>([]);
 

@@ -1,5 +1,5 @@
-import { isRGB } from '@telegram-apps/sdk-react';
 import type { FC, ReactNode } from 'react';
+import { isRGB } from '@telegram-apps/sdk-react';
 
 import { RGB } from '@/components/RGB/RGB.tsx';
 import { Link } from '@/components/Link/Link.tsx';
