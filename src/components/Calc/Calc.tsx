@@ -3,42 +3,18 @@ import * as jsoncrush from 'jsoncrush';
 
 //https://pdfme.com/docs/getting-started
 
-import { dateFromString, getDayOfYear, getDays, doKeyRatesTable } from './functions';
+import { dateFromString, getDayOfYear, getDays, doKeyRatesTable, templateCalcTable, InputsCalcTable, CalcProps, DebtRow, ShortTableRow, MainTableRow } from './common';
 
 import { FC, useEffect, useState } from 'react';
 
-import { Template, BLANK_A4_PDF } from '@pdfme/common';
-//import { text, barcodes, image } from '@pdfme/schemas';
-import { generate } from '@pdfme/generator';
+import { Template } from '@pdfme/common';
 
-const template: Template = {
-  basePdf: BLANK_A4_PDF,
-  schemas: [
-    [
-      {
-        name: 'example_text_1',
-        type: 'text',
-        position: { x: 10, y: 10 },
-        width: 30,
-        height: 10,
-      },
-      {
-        name: 'example_text_2',
-        type: 'text',
-        position: { x: 45, y: 10 },
-        width: 30,
-        height: 10,
-      },
-      {
-        name: 'example_text_3',
-        type: 'text',
-        position: { x: 80, y: 10 },
-        width: 40,
-        height: 10,
-      },
-    ],
-  ],
-};
+import { 
+  //text, barcodes, image,
+  text,
+  table
+} from '@pdfme/schemas';
+import { generate } from '@pdfme/generator';
 
 //const multiVariableText = {}
 
@@ -51,17 +27,18 @@ const plugins = {
 };
 */
 
-const inputs = [
-  {
-    example_text_1: 'Привет, Мир!',
-    example_text_2: 'Йахуууу...',
-    example_text_3: 'Привет, Мистер Попс!',
-    //example_image: 'data:image/png;base64,iVBORw0KG....',
-    //example_qr_code: 'https://pdfme.com/',
-  },
-];
+//const inputs = [
+//  {
+//    example_text_1: 'Привет, Мир!',
+//    example_text_2: 'Йахуууу...',
+//    example_text_3: 'Привет, Мистер Попс!',
+//    //example_image: 'data:image/png;base64,iVBORw0KG....',
+//    //example_qr_code: 'https://pdfme.com/',
+//  },
+//];
 
 import { 
+  openTelegramLink,
   //useLaunchParams,
   retrieveLaunchParams,
   //retrieveRawInitData,
@@ -83,45 +60,13 @@ import { Button } from 'primereact/button';
 import { DataView } from 'primereact/dataview';
 import { classNames } from 'primereact/utils';
 
-import { getCurrencies } from './functions';
+import { getCurrencies } from './common';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { botMethod, PreparedInlineMessage } from '@/api/bot/methods';
 
 //import { segodnya } from './functions';
 addLocale('ru', RU.ru);
 locale('ru');
-    
-interface CalcProps {
-  type?: number; // 0 - 395, 1 - penalty
-}
-
-interface DebtRow {
-  id: number;
-  date: Date;
-  sum: number;
-}
-
-interface MainTableRow {
-  id: number;
-  date: Date;
-  in?: number;
-  inc?: number;
-  dec?: number;
-  out?: number; 
-  percent?: number;
-  penalty?: number;
-}
-
-interface ShortTableRow {
-  s: Date;
-  e: Date;
-  i?: number;
-  inc?: number;
-  dec?: number;
-  o?: number; 
-  pcnt?: number;
-  plty?: number;
-}
 
 const debtdecrease = [
   // после отладки удалить
@@ -143,6 +88,177 @@ const currencies = [
   { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
 ];
 
+function doGeneratePdf(template: Template, inputs: InputsCalcTable[], cb: (blob: Blob) => void) {
+  /*
+  *** Расчёт процентов по ст.395 ГК РФ
+  период / задолженность / расчёт процентов(неустойки) / сумма процентов(неустойки)
+  --------------------------------------------------------------------------------------------
+  01.02.2025 - 10.02.2025    100000 +         0 -         0 =    100000 0.0575%  10    575.34
+  11.02.2025 - 11.02.2025    100000 +         0 -      1000 =     99000 0.0575%   1     57.53
+  12.02.2025 - 12.02.2025     99000 +      3000 -         0 =    102000 0.0575%   1     58.68
+  13.02.2025 - 10.03.2025    102000 +         0 -         0 =    102000 0.0575%  26   1525.81
+  11.03.2025 - 11.03.2025    102000 +         0 -      2000 =    100000 0.0575%   1     58.68
+  12.03.2025 - 12.03.2025    100000 +      2000 -         0 =    102000 0.0575%   1     58.68
+  13.03.2025 - 10.04.2025    102000 +         0 -         0 =    102000 0.0575%  29   1701.86
+  11.04.2025 - 11.04.2025    102000 +         0 -      3000 =     99000 0.0575%   1     58.68
+  12.04.2025 - 12.04.2025     99000 +      1000 -         0 =    100000 0.0575%   1     57.53
+  13.04.2025 - 30.04.2025    100000 +         0 -         0 =    100000 0.0575%  18   1035.62
+  --------------------------------------------------------------------------------------------
+  */
+  generate({
+    template: template,
+    inputs: inputs,
+    plugins: { Text: text, Table: table },
+  }).then((pdf) => {
+    const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+    cb(blob); // передача blob PDF в функцию обратного вызова
+    //window.open(URL.createObjectURL(blob));
+    //console.log('PDF: ', pdf);
+  });
+}
+
+// функция для создания файла PDF
+// модификация doShortTable()
+function doPDF(mainTable: MainTableRow[], InitialData?: any) {
+
+  const ID = InitialData || '';
+  
+  let currentShortRow: ShortTableRow | null = null; // текущая строка
+  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
+  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+  let lastDaysInYear = 365; // количество дней в году по умолчанию
+
+  let rows: ShortTableRow[] = [];
+
+  mainTable.map((row, index, array) => {
+    // количество дней в году для текущей даты
+    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+    
+    // проверка на изменение ключевых параметров
+    const setNewShortRow = 
+          lastRow?.in !== row.in || 
+          lastRow?.out !== row.out || 
+          lastRow?.percent !== row.percent ||
+          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
+
+    if (setNewShortRow) {
+      currentShortRow = {
+        s: row.date,
+        e: row.date,
+        i: row.in,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: row.penalty  
+      } as ShortTableRow;
+      if (lastShortRow) {
+        rows.push(lastShortRow);
+      } else {
+        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
+      }
+    } else {
+      if (!currentShortRow) return;
+      const penalty = row.penalty === undefined ? 0 : row.penalty;
+      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
+      currentShortRow = {
+        s: currentShortRow.s,
+        e: row.date,
+        i: currentShortRow.i,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: sumPenalty  
+      }
+      if (array.length - 1 === index) {
+        rows.push(currentShortRow);
+      }
+    }
+
+    if (currentShortRow === null) currentShortRow = {
+      s: row.date,
+      e: row.date,
+      ...row
+    } as ShortTableRow;
+
+    lastShortRow = currentShortRow;
+    // после проверки текущий ряд сохраняем в переменную
+    lastRow = row;
+    lastDaysInYear = daysInYear;
+  });
+
+  let sum = 0;
+
+  // do inputs
+  const inputsArr: [string,string,string,string][] = [];
+  rows.forEach(row => {
+    const start = row.s.toLocaleDateString();
+    const end = row.e.toLocaleDateString();
+    
+    const oneDay = 1000 * 60 * 60 * 24;
+    // Вычисление разницы во времени между двумя датами
+    const diffInTime = row.e.getTime() - row.s.getTime();
+    // Вычисление количества дней между двумя датами
+    const diffInDays = Math.round(diffInTime / oneDay);
+
+    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+
+    const sumin = row.i;
+    const inc = row.inc;
+    const dec = row.dec;
+    const sumout = row.o;
+    const percent = Number(row.pcnt); // процент в год
+    const penalty = Number(row.plty);
+
+    const pen = Number(penalty.toFixed(4));
+    sum = sum + pen;
+    
+    const inputRow: any = [];
+
+    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
+
+    inputRow.push(`${start} - ${end}`); // период
+    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
+    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
+    inputRow.push(`${pen}`); // проценты
+    inputsArr.push(inputRow);
+  });
+
+  const inputsTable: InputsCalcTable[] = [
+    {
+      "title": "Расчёт процентов (неустойки)",
+      "Calculation": inputsArr,
+      "sum": `Итого: ${sum.toFixed(2).toString()}`,
+      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
+    }
+  ];
+  
+  function prepareBlob(blob: Blob) {
+    // обрабатываем Blob PDF
+    window.open(URL.createObjectURL(blob));
+
+    const FD = new FormData();
+    FD.append('chat_id', ID?.user?.id.toString() || '');
+    FD.append('document', blob, 'calc.pdf');
+    botMethod(
+      'sendDocument',
+      FD
+    ).then((result) => {
+      console.log(result);
+      if (openTelegramLink.isAvailable()) {
+        openTelegramLink('https://t.me/'+import.meta.env.VITE_BOT_NAME);
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+
+  }
+
+  doGeneratePdf(templateCalcTable, inputsTable, prepareBlob );
+}
+
+
 export const Calc: FC<CalcProps> = ({type}) => {
   /*
   const pdf_content = { content: "<h1>Welcome to html-pdf-node-ts</h1>" };
@@ -154,11 +270,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
   });
   */
 
+  /*
   generate({ template, inputs }).then((pdf) => {
     const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
     window.open(URL.createObjectURL(blob));
     console.log('PDF: ', pdf);
   });
+  */
   
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
   const [debt, setDebt] = useState<number>(0);
@@ -431,6 +549,62 @@ export const Calc: FC<CalcProps> = ({type}) => {
       if (str2.toString().length > maxLenth) maxLenth = str2.toString().length;
     });
  
+    /*
+    // do inputs
+    const inputsArr: [string,string,string,string][] = [];
+    sum = 0;
+    rows.forEach(row => {
+      const start = row.s.toLocaleDateString();
+      const end = row.e.toLocaleDateString();
+      
+      const oneDay = 1000 * 60 * 60 * 24;
+      // Вычисление разницы во времени между двумя датами
+      const diffInTime = row.e.getTime() - row.s.getTime();
+      // Вычисление количества дней между двумя датами
+      const diffInDays = Math.round(diffInTime / oneDay);
+
+      const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+
+      const sumin = row.i;
+      const inc = row.inc;
+      const dec = row.dec;
+      const sumout = row.o;
+      const percent = Number(row.pcnt); // процент в год
+      const percentPerDay = percent / daysInYear;
+      const penalty = Number(row.plty);
+
+      //const str = `${startdate} - ${enddate} ${sumin} + ${inc} - ${dec} = ${sumout} (${percent}% * ${sumin} * ${diffInDays + 1} = ${penalty.toFixed(4)})\n`;
+      const str2 = `${start} - ${end} ${sumin?.toString().padStart(9, ' ')} + ${inc?.toString().padStart(9, ' ')} - ${dec?.toString().padStart(9, ' ')} = ${sumout?.toString().padStart(9, ' ')} ${percentPerDay?.toFixed(4).toString().padStart(3, ' ')}% ${(diffInDays + 1).toString().padStart(3, ' ')} ${penalty.toFixed(2).toString().padStart(9, ' ')}\n`;
+      
+      //print = print + str2;
+      const pen = Number(penalty.toFixed(4));
+      sum = sum + pen;
+      
+      //if (str2.toString().length > maxLenth) maxLenth = str2.toString().length;
+      
+      const inputRow: any = [];
+
+      const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
+
+      inputRow.push(`${start} - ${end}`); // период
+      inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
+      inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
+      inputRow.push(`${pen}`); // проценты
+      inputsArr.push(inputRow);
+    });
+
+    const inputsTable: InputsCalcTable[] = [
+      {
+       "title": "Расчёт процентов (неустойки)",
+       "Calculation": inputsArr,
+       "sum": `Итого: ${sum.toFixed(2).toString()}`,
+       "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
+      }
+    ];
+      
+    doGeneratePdf(templateCalcTable, inputsTable);
+    */
+
     /** принт тест */
     //console.log('maxLenth: ', maxLenth);
     let line = new Array(maxLenth + 1).join( '-' );
@@ -1134,6 +1308,32 @@ export const Calc: FC<CalcProps> = ({type}) => {
             </div>
           }
           subheaderNoWrap
+          borderBottom
+        />
+        {/* --раздел-- */}
+        <AppSection
+          header={'Заголовок 3'}
+          subheader={'Подзаголовок 3'}
+          body={
+            <div style={{width: '100%'}} className='flex justify-content-start'>
+                <Button
+                  className='btntest mt-2'
+                  onClick={
+                    () => {
+                      if (datefrom && dateto) {
+                        const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
+                        doPDF(newMainTable, ID);
+                      }
+                    }
+                  }
+                >
+                  Тест PDF
+                </Button>
+                <span>{ eventStatus }</span>
+            </div>
+          }
+          subheaderNoWrap
+          
         />
       </Panel>
       { false &&

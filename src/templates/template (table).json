@@ -1,0 +1,182 @@
+{
+  "schemas": [
+    [
+      {
+        "name": "title",
+        "type": "text",
+        "content": "{\"header\":\"Расчёт процентов (неустойки)\"}",
+        "position": {
+          "x": 10,
+          "y": 20
+        },
+        "width": 190,
+        "height": 11.38,
+        "rotate": 0,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "fontSize": 11,
+        "lineHeight": 1,
+        "characterSpacing": 0,
+        "fontColor": "#000000",
+        "backgroundColor": "",
+        "opacity": 1,
+        "strikethrough": false,
+        "underline": false,
+        "readOnly": false,
+        "text": "{header} ",
+        "variables": [
+          "header"
+        ],
+        "required": false
+      },
+      {
+        "name": "Calculation",
+        "type": "table",
+        "position": {
+          "x": 10,
+          "y": 32.31
+        },
+        "width": 189.71,
+        "height": 27.5256,
+        "content": "[[\"01.01.2025 - 10.01.2025\",\"100 000 + 0 - 0 = 100 000\",\"10 * 0.0575% * 100 000 =\",\"575.34\"],[\"11.01.2025 - 20.01.2025\",\"100 000 + 0 - 0 = 100 000\",\"10 * 0.0575% * 100 000 =\",\"575.34\"]]",
+        "showHead": true,
+        "head": [
+          "Период",
+          "Задолженность",
+          "Расчет *",
+          "Сумма **"
+        ],
+        "headWidthPercentages": [
+          21.433477412893364,
+          34.108929418586264,
+          30.930938449914787,
+          13.526654718605588
+        ],
+        "tableStyles": {
+          "borderWidth": 0.1,
+          "borderColor": "#808080"
+        },
+        "headStyles": {
+          "fontName": "Roboto",
+          "fontSize": 9,
+          "characterSpacing": 0,
+          "alignment": "left",
+          "verticalAlignment": "middle",
+          "lineHeight": 1,
+          "fontColor": "#ffffff",
+          "borderColor": "#808080",
+          "backgroundColor": "#808080",
+          "borderWidth": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "padding": {
+            "top": 3,
+            "right": 3,
+            "bottom": 3,
+            "left": 3
+          }
+        },
+        "bodyStyles": {
+          "fontName": "Roboto",
+          "fontSize": 9,
+          "characterSpacing": 0,
+          "alignment": "left",
+          "verticalAlignment": "middle",
+          "lineHeight": 1,
+          "fontColor": "#000000",
+          "borderColor": "#808080",
+          "backgroundColor": "",
+          "alternateBackgroundColor": "#ffffff",
+          "borderWidth": {
+            "top": 0.1,
+            "right": 0.1,
+            "bottom": 0.1,
+            "left": 0.1
+          },
+          "padding": {
+            "top": 3,
+            "right": 3,
+            "bottom": 3,
+            "left": 3
+          }
+        },
+        "columnStyles": {
+          "alignment": {
+            "0": "center",
+            "1": "left",
+            "2": "left",
+            "3": "left"
+          }
+        },
+        "required": false,
+        "readOnly": false
+      },
+      {
+        "name": "sum",
+        "type": "text",
+        "content": "{\"sum\":\"Сумма процентов (неустойки)\"}",
+        "position": {
+          "x": 10,
+          "y": 65.24
+        },
+        "width": 190,
+        "height": 11.38,
+        "rotate": 0,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "fontSize": 11,
+        "lineHeight": 1,
+        "characterSpacing": 0,
+        "fontColor": "#000000",
+        "backgroundColor": "",
+        "opacity": 1,
+        "strikethrough": false,
+        "underline": false,
+        "readOnly": false,
+        "text": "{sum} ***",
+        "variables": [
+          "sum"
+        ],
+        "required": false
+      },
+      {
+        "name": "comment",
+        "type": "text",
+        "content": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства. Значение процента в день приводится до 4 знака после запятой.\n** Сумма процентов за период приводится до 2 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой.",
+        "position": {
+          "x": 10,
+          "y": 77.68
+        },
+        "width": 189.97,
+        "height": 13.49,
+        "rotate": 0,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "fontSize": 9,
+        "lineHeight": 1,
+        "characterSpacing": 0,
+        "fontColor": "#000000",
+        "backgroundColor": "",
+        "opacity": 1,
+        "strikethrough": false,
+        "underline": false,
+        "required": false,
+        "readOnly": false
+      }
+    ]
+  ],
+  "basePdf": {
+    "width": 210,
+    "height": 297,
+    "padding": [
+      20,
+      10,
+      20,
+      10
+    ]
+  },
+  "pdfmeVersion": "5.3.15"
+}
