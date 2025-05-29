@@ -74,64 +74,99 @@ const currencies = [
 13.04.2025 - 30.04.2025    100000 +         0 -         0 =    100000 0.0575%  18   1035.62
 --------------------------------------------------------------------------------------------
 */
+
+// Интерфейс параметров для функции обратного вызова для обработки blob PDF
+interface IParamsDoWithPDF {
+  sendAdmin?: boolean;            // Признак отправки админу
+  cb?: (result: any) => void;     // Обработка результата обратного вызова
+  caption?: string;               // Заголовок
+}
+
+// Интерфейс функции обратного вызова для обработки blob PDF
+interface IDoWithPDF {
+  (
+    blob: Blob,                       // Blob PDF
+    InitialData: any,                 // Данные инициализации приложения
+    params?: IParamsDoWithPDF         // Параметры
+  ) : void 
+}
+
 function doGeneratePdf(
   template: Template,                 // Шаблон
   inputs: InputsCalcTable[],          // Входные данные
   InitialData: any,                   // Данные инициализации приложения
-  cb: (                               // Обратный вызов
-    blob: Blob,                       // Blob PDF
-    InitialData: any,
-    sendAdmin?: boolean,              // Признак отправки админу
-    cb?: (result: any) => void        // Обработка результата обратного вызова
-  ) => void
+  cb: IDoWithPDF,                     // Функция обратного вызова
+  caption?: string                    // Заголовок
 ) {
   generate({
     template: template,
     inputs: inputs,
     plugins: { Text: text, Table: table },
   }).then((pdf) => {
+    // Блоб файла PDF с расчётом
     const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+    
     function logresult(result: any) {
       // функция для отслеживания результата обратного вызова  
       console.log('Обработка результата: ', result)
     }
     const ID = InitialData || '';
-    cb(blob, ID, false, logresult); // передача blob PDF в функцию обратного вызова
+    // Отправляем PDF в функцию-обработчик
+    // передача blob PDF в функцию обратного вызова
+    const params: IParamsDoWithPDF = {
+      sendAdmin: false,                             // Признак отправки админу
+      cb: logresult,                                // обработка результата обратного вызова
+      caption: caption || 'Документ с расчётом'     // заголовок документа
+    };
+    cb(blob, ID, params); 
     // console.log('PDF: ', pdf);
   });
 }
 
-/////////
-///////// Оптимизировать код функции doPDF и sendPDF
-/////////
+// Удаление сообщений в чате
+function deleteMessage(
+  chat_id: number,
+  message_id: number
+) {
+  /*
+  deleteMessage
+  ---------------------------------------------------------------------------------------------
+  Используйте этот метод для удаления сообщений, в том числе служебных, со следующими ограничениями:
+  - Сообщение может быть удалено, только если оно было отправлено менее 48 часов назад.
+  - Служебные сообщения о создании супергруппы, канала или темы на форуме удалить невозможно.
+  - Сообщение dice в приватном чате можно удалить, только если оно было отправлено более 24 часов назад.
+  - Боты могут удалять исходящие сообщения в приватных чатах, группах и супергруппах.
+  - Боты могут удалять входящие сообщения в личных чатах.
+  - Боты с разрешением can_post_messages могут удалять исходящие сообщения в каналах.
+  - Если бот является администратором группы, он может удалить любое сообщение в ней.
+  - Если у бота есть разрешение can_delete_messages в супергруппе или канале, он может удалить любое сообщение в них.
+  При успешном выполнении возвращает True.
+
+  Параметр    Тип                 Обязательный  Описание
+  ---------------------------------------------------------------------------------------------
+  chat_id     Integer или String  Да            Уникальный идентификатор целевого чата или имя пользователя целевого канала (в формате @channelusername)
+  message_id  Integer             Да            Идентификатор сообщения, которое требуется удалить.
+  */
+  const FD = new FormData();
+  FD.append('chat_id', chat_id.toString());
+  FD.append('message_id', message_id.toString());
+  
+  botMethod(
+    'deleteMessage',
+    FD
+  ).then((result: any) => {
+    console.log(result);
+  }).catch((error)=>{
+    console.log(error);
+  });
+}
 
 /*** --- оптимизировать совместно с sendPreparedBlob */
 function sendDocumentBlob(
   blob: Blob,
   InitialData: any,
-  sendAdmin: boolean = false,
-  cb?: (result: any) => void
+  params?: IParamsDoWithPDF
 ) {
-
-/*
-deleteMessage
----------------------------------------------------------------------------------------------
-Use this method to delete a message, including service messages, with the following limitations:
-- A message can only be deleted if it was sent less than 48 hours ago.
-- Service messages about a supergroup, channel, or forum topic creation can't be deleted.
-- A dice message in a private chat can only be deleted if it was sent more than 24 hours ago.
-- Bots can delete outgoing messages in private chats, groups, and supergroups.
-- Bots can delete incoming messages in private chats.
-- Bots granted can_post_messages permissions can delete outgoing messages in channels.
-- If the bot is an administrator of a group, it can delete any message there.
-- If the bot has can_delete_messages permission in a supergroup or a channel, it can delete any message there.
-Returns True on success.
-
-Parameter   Type                Required  Description
-chat_id     Integer or String   Yes       Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-message_id  Integer             Yes       Identifier of the message to delete.
-*/
-
   const ID = InitialData || '';
 
   // обрабатываем Blob PDF
@@ -141,17 +176,57 @@ message_id  Integer             Yes       Identifier of the message to delete.
   let chat_id = ID?.user?.id.toString() || '';
   
   // Если отправка сообщения админу, то изменяем chat_id на админский ID
-  if (sendAdmin) {
-    console.log('sendAdmin: ', sendAdmin);
+  if (params?.sendAdmin) {
+    console.log('sendAdmin: ', params?.sendAdmin);
     const admin_id = import.meta.env.VITE_ADMIN_ID;
     console.log('admin_id:', admin_id);
     chat_id = admin_id;
   }
+  /*
+    sendDocument
+    Используйте этот метод для отправки обычных файлов. В случае успеха отправленное сообщение будет возвращено. В настоящее время боты могут отправлять файлы любого типа размером до 50 МБ, но в будущем это ограничение может быть изменено.
+
+    Параметр                        Тип                       Обязательный  Описание
+    --------------------------------------------------------------------------------
+    business_connection_id	        String	                  По выбору     Уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
+    chat_id                         Integer или String	      Да	          Уникальный идентификатор целевого чата или имя пользователя целевого канала (в формате @channelusername)
+    message_thread_id	              Integer	                  По выбору     Уникальный идентификатор целевой ветки (темы) форума; только для супергрупп форума
+    document	                      InputFile или String      Да	          Файл для отправки. Передайте file_id в виде строки, чтобы отправить файл, который существует на серверах Telegram (рекомендуется), передайте URL-адрес HTTP в виде строки, чтобы Telegram получил файл из Интернета, или загрузите новый файл с помощью multipart/form-data. Подробнее об отправке файлов »
+    thumbnail	                      InputFile или String	    По выбору     Эскиз отправленного файла; можно игнорировать, если создание эскиза для файла поддерживается на стороне сервера. Эскиз должен быть в формате JPEG и иметь размер менее 200 КБ. Ширина и высота эскиза не должны превышать 320. Игнорируется, если файл не загружается с помощью multipart/form-data. Эскизы нельзя использовать повторно, их можно загружать только как новый файл, поэтому вы можете передать «attach://<имя_файла_приложения>», если эскиз был загружен с помощью multipart/form-data под <именем_файла_приложения>. Подробнее об отправке файлов »
+    caption	                        String	                  По выбору     Заголовок документа (также может использоваться при повторной отправке документов по идентификатору файла), 0-1024 символа после разбора сущностей
+    parse_mode	                    String	                  По выбору     Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+    caption_entities	              Array of MessageEntity	  По выбору     Сериализованный в формате JSON список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+    disable_content_type_detection	Boolean	                  По выбору     Отключает автоматическое определение типа контента на стороне сервера для файлов, загруженных с помощью multipart/form-data
+    disable_notification	          Boolean	                  По выбору     Отправляет сообщение без звука. Пользователи получат уведомление без звука.
+    protect_content	                Boolean	                  По выбору     Защищает содержимое отправленного сообщения от пересылки и сохранения
+    allow_paid_broadcast	          Boolean	                  По выбору     Установите значение True, чтобы разрешать отправку до 1000 сообщений в секунду, игнорируя ограничения на трансляцию, за плату в 0,1 звезды Telegram за сообщение. Соответствующие звезды будут списаны с баланса бота
+    message_effect_id	              String	                  По выбору     Уникальный идентификатор эффекта сообщения, который будет добавлен к сообщению; только для личных чатов
+    reply_parameters	              ReplyParameters	          По выбору     Описание сообщения, на которое нужно ответить
+    reply_markup	                  InlineKeyboardMarkup или 
+                                    ReplyKeyboardMarkup или 
+                                    ReplyKeyboardRemove или 
+                                    ForceReply	              По выбору     Дополнительные параметры интерфейса. Сериализованный в формате JSON объект для встроенной клавиатуры, пользовательской клавиатуры для ответов, инструкций по удалению клавиатуры для ответов или по принудительному ответу пользователя
+  */
   
-  FD.append('chat_id', chat_id);
+  //FD.append('business_connection_id', business_connection_id);
+  FD.append('chat_id', chat_id);                                                    // обязательный параметр, идентификатор целевого чата, в который будет отправлен файл
+  //FD.append('message_thread_id', message_thread_id);                              // необязательный параметр, идентификатор целевой ветки (темы) форума, в который будет отправлен файл
+  FD.append('document', blob, 'calculation.pdf');                                   // обязательный параметр, файл для отправки
+  //FD.append('thumbnail', thumbnail, 'calculation.png');                           // необязательный параметр, эскиз отправленного файла
+  FD.append('caption', params && params?.caption || '');                            // необязательный параметр, заголовок документа 
+  //FD.append('parse_mode', parse_mode);                                            // необязательный параметр, режим для анализа сущностей в заголовке документа
+  //FD.append('caption_entities', caption_entities);                                // необязательный параметр, список специальных сущностей
+  //FD.append('disable_content_type_detection', disable_content_type_detection);    // необязательный параметр
+  //FD.append('disable_notification', disable_notification);                        // необязательный параметр
+  //FD.append('protect_content', protect_content);                                  // необязательный параметр
+  //FD.append('allow_paid_broadcast', pallow_paid_broadcast);                       // необязательный параметр
+  //FD.append('message_effect_id', message_effect_id);                              // необязательный параметр
+  //FD.append('reply_parameters', reply_parameters);                                // необязательный параметр
+  
+  //////////////////////////
   // при вызове только savePreparedInlineMessage расчёт отправлять админу, с последующим удалением сообщения кэшированного файла
   // deleteMessage с обязательными мараметрами chat_id и message_id
-  FD.append('document', blob, 'calculation.pdf');
+  
   botMethod(
     'sendDocument',
     FD
@@ -165,24 +240,13 @@ message_id  Integer             Yes       Identifier of the message to delete.
       // перейдти по ссылке в телеграм бот
       openTelegramLink('https://t.me/' + import.meta.env.VITE_BOT_NAME);
     }
-    cb && cb(result);
+    params?.cb && params.cb(result);
     
-    if (sendAdmin) {
+    if (params?.sendAdmin) {
       // после отправки документа админу, удаляем сообщение с ним
       console.log('удаляем сообщение: ', payload.result.message_id);
       
-      const FD = new FormData();
-      FD.append('chat_id', chat_id);
-      FD.append('message_id', payload.result.message_id);
-      
-      botMethod(
-        'deleteMessage',
-        FD
-      ).then((result: any) => {
-        console.log(result);
-      }).catch((error)=>{
-        console.log(error);
-      });
+      deleteMessage(chat_id, payload.result.message_id);
     }
   }).catch((error)=>{
     console.log(error);
@@ -194,8 +258,7 @@ message_id  Integer             Yes       Identifier of the message to delete.
 function sendPreparedBlob(
   blob: Blob,
   InitialData: any,
-  sendAdmin: boolean = false,
-  cb?: (result: any) => void
+  params?: IParamsDoWithPDF
 ) {
   // Выполнить все Этапы
   // 1. Создание документа
@@ -231,11 +294,17 @@ function sendPreparedBlob(
     id: 1,
     title: 'Заголовок 1',
     description: 'Описание 1',
-    caption: 'Подпись 1',
+    caption: params?.caption || '',
     input_message_content: {
       'message_text': 'А это текст сообщения 1'
     }
   };
+
+  ////////////////////////////////////////
+  ////////////////////////////////////////
+  // ПОРА РЕАЛИЗОВАТЬ ОТПРАВКУ PDF
+  ////////////////////////////////////////
+  ////////////////////////////////////////
   
   /*
   const doc = {
@@ -271,7 +340,7 @@ function sendPreparedBlob(
 
   const FD = new FormData();
 
-  if (sendAdmin) {
+  if (params?.sendAdmin) {
     // Если указана отправка сообщения админу
   }
 
@@ -292,14 +361,16 @@ function sendPreparedBlob(
     });
 
     console.log(result);
-    cb && cb(result); // объединить вывод в консоль
+    params?.cb && params.cb(result); // объединить вывод в консоль
 
     const PIM: PreparedInlineMessage = result.payload?.result;
     console.log(PIM.id);
-    postEvent('web_app_send_prepared_message', {id: PIM.id.toString()});
+    postEvent('web_app_send_prepared_message', {
+      id: PIM.id.toString()
+    });
     on('prepared_message_sent', (data) => { 
       console.log(data);
-// убрать setEventStatus
+      // убрать setEventStatus
       //setEventStatus && setEventStatus(String(data)); 
     });
     on('prepared_message_failed', (data) => {
@@ -311,272 +382,11 @@ function sendPreparedBlob(
   });
 }
 
-// функция для создания файла PDF
-// модификация doShortTable()
-// вызывается по кнопке Тест PDF
-/*
-function doPDF(
-  mainTable: MainTableRow[],
-  InitialData?: any,
-  setEventStatus?: (data: string) => void
-) {
-
-  const EventStatus = 'Отправка PDF боту...';
-  setEventStatus && setEventStatus(EventStatus);
-  const ID = InitialData || '';
-  
-  let currentShortRow: ShortTableRow | null = null; // текущая строка
-
-  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
-  let lastDaysInYear = 365; // количество дней в году по умолчанию
-
-  let rows: ShortTableRow[] = [];
-
-  mainTable.map((row, index, array) => {
-    // количество дней в году для текущей даты
-    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
-    
-    // проверка на изменение ключевых параметров
-    const setNewShortRow = 
-          lastRow?.in !== row.in || 
-          lastRow?.out !== row.out || 
-          lastRow?.percent !== row.percent ||
-          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
-
-    if (setNewShortRow) {
-      currentShortRow = {
-        s: row.date,
-        e: row.date,
-        i: row.in,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: row.penalty  
-      } as ShortTableRow;
-      if (lastShortRow) {
-        rows.push(lastShortRow);
-      } else {
-        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
-      }
-    } else {
-      if (!currentShortRow) return;
-      const penalty = row.penalty === undefined ? 0 : row.penalty;
-      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
-      currentShortRow = {
-        s: currentShortRow.s,
-        e: row.date,
-        i: currentShortRow.i,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: sumPenalty  
-      }
-      if (array.length - 1 === index) {
-        rows.push(currentShortRow);
-      }
-    }
-
-    if (currentShortRow === null) currentShortRow = {
-      s: row.date,
-      e: row.date,
-      ...row
-    } as ShortTableRow;
-
-    lastShortRow = currentShortRow;
-    // после проверки текущий ряд сохраняем в переменную
-    lastRow = row;
-    lastDaysInYear = daysInYear;
-  });
-
-  let sum = 0;
-
-  // do inputs
-  const inputsArr: [string,string,string,string][] = [];
-  rows.forEach(row => {
-    const start = row.s.toLocaleDateString();
-    const end = row.e.toLocaleDateString();
-    
-    const oneDay = 1000 * 60 * 60 * 24;
-    // Вычисление разницы во времени между двумя датами
-    const diffInTime = row.e.getTime() - row.s.getTime();
-    // Вычисление количества дней между двумя датами
-    const diffInDays = Math.round(diffInTime / oneDay);
-
-    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
-
-    const sumin = row.i;
-    const inc = row.inc;
-    const dec = row.dec;
-    const sumout = row.o;
-    const percent = Number(row.pcnt); // процент в год
-    const penalty = Number(row.plty);
-
-    const pen = Number(penalty.toFixed(4));
-    sum = sum + pen;
-    
-    const inputRow: any = [];
-
-    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
-
-    inputRow.push(`${start} - ${end}`); // период
-    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
-    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
-    inputRow.push(`${pen}`); // проценты
-    inputsArr.push(inputRow);
-  });
-
-  const inputsTable: InputsCalcTable[] = [
-    {
-      "title": "Расчёт процентов (неустойки)",
-      "Calculation": inputsArr,
-      "sum": `Итого: ${sum.toFixed(2).toString()}`,
-      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
-    }
-  ];
-
-  // генерация PDF с обработкой результата через обратный вызов
-  doGeneratePdf(templateCalcTable, inputsTable, ID, sendDocumentBlob );
-}
-
-// Почти тоже самое что и doPDF, но с отправкой файла выбранному пользователю
-function sendPDF(
-  mainTable: MainTableRow[],
-  InitialData?: any,
-  setEventStatus?: (data: string) => void
-) {
-
-  const EventStatus = 'Отправка PDF выбранному пользователю...';
-  setEventStatus && setEventStatus(EventStatus);
-  const ID = InitialData || '';
-  
-  let currentShortRow: ShortTableRow | null = null; // текущая строка
-
-  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
-  let lastDaysInYear = 365; // количество дней в году по умолчанию
-
-  let rows: ShortTableRow[] = [];
-
-  mainTable.map((row, index, array) => {
-    // количество дней в году для текущей даты
-    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
-    
-    // проверка на изменение ключевых параметров
-    const setNewShortRow = 
-          lastRow?.in !== row.in || 
-          lastRow?.out !== row.out || 
-          lastRow?.percent !== row.percent ||
-          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
-
-    if (setNewShortRow) {
-      currentShortRow = {
-        s: row.date,
-        e: row.date,
-        i: row.in,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: row.penalty  
-      } as ShortTableRow;
-      if (lastShortRow) {
-        rows.push(lastShortRow);
-      } else {
-        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
-      }
-    } else {
-      if (!currentShortRow) return;
-      const penalty = row.penalty === undefined ? 0 : row.penalty;
-      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
-      currentShortRow = {
-        s: currentShortRow.s,
-        e: row.date,
-        i: currentShortRow.i,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: sumPenalty  
-      }
-      if (array.length - 1 === index) {
-        rows.push(currentShortRow);
-      }
-    }
-
-    if (currentShortRow === null) currentShortRow = {
-      s: row.date,
-      e: row.date,
-      ...row
-    } as ShortTableRow;
-
-    lastShortRow = currentShortRow;
-    // после проверки текущий ряд сохраняем в переменную
-    lastRow = row;
-    lastDaysInYear = daysInYear;
-  });
-
-  let sum = 0;
-
-  // do inputs
-  const inputsArr: [string,string,string,string][] = [];
-  rows.forEach(row => {
-    const start = row.s.toLocaleDateString();
-    const end = row.e.toLocaleDateString();
-    
-    const oneDay = 1000 * 60 * 60 * 24;
-    // Вычисление разницы во времени между двумя датами
-    const diffInTime = row.e.getTime() - row.s.getTime();
-    // Вычисление количества дней между двумя датами
-    const diffInDays = Math.round(diffInTime / oneDay);
-
-    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
-
-    const sumin = row.i;
-    const inc = row.inc;
-    const dec = row.dec;
-    const sumout = row.o;
-    const percent = Number(row.pcnt); // процент в год
-    const penalty = Number(row.plty);
-
-    const pen = Number(penalty.toFixed(4));
-    sum = sum + pen;
-    
-    const inputRow: any = [];
-
-    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
-
-    inputRow.push(`${start} - ${end}`); // период
-    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
-    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
-    inputRow.push(`${pen}`); // проценты
-    inputsArr.push(inputRow);
-  });
-
-  const inputsTable: InputsCalcTable[] = [
-    {
-      "title": "Расчёт процентов (неустойки)",
-      "Calculation": inputsArr,
-      "sum": `Итого: ${sum.toFixed(2).toString()}`,
-      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
-    }
-  ];
-  
-  doGeneratePdf(templateCalcTable, inputsTable, ID, sendPreparedBlob );
-}*/
-
 // Функция на замену doPDF и sendPDF
 function doWithCalculation(
   mainTable: MainTableRow[],
   InitialData?: any,
-  func?: (
-    blob: Blob,
-    InitialData: any,
-    sendAdmin?: boolean,
-    cb?: (result: any) => void
-  ) => void,
+  func?: IDoWithPDF,
   setEventStatus?: (data: string) => void
 ) {
 
@@ -696,7 +506,7 @@ function doWithCalculation(
     }
   ];
   
-  func && doGeneratePdf(templateCalcTable, inputsTable, ID, func );
+  func && doGeneratePdf(templateCalcTable, inputsTable, ID, func, 'Расчёт процентов (неустойки)' );
 }
   /*
   const pdf_content = { content: "<h1>Welcome to html-pdf-node-ts</h1>" };
@@ -1705,3 +1515,264 @@ export const Calc: FC<CalcProps> = ({type}) => {
        
   )
 }
+
+
+// функция для создания файла PDF
+// модификация doShortTable()
+// вызывается по кнопке Тест PDF
+
+/////////
+///////// Оптимизировать код функции doPDF и sendPDF
+/////////
+/*
+function doPDF(
+  mainTable: MainTableRow[],
+  InitialData?: any,
+  setEventStatus?: (data: string) => void
+) {
+
+  const EventStatus = 'Отправка PDF боту...';
+  setEventStatus && setEventStatus(EventStatus);
+  const ID = InitialData || '';
+  
+  let currentShortRow: ShortTableRow | null = null; // текущая строка
+
+  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
+  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+  let lastDaysInYear = 365; // количество дней в году по умолчанию
+
+  let rows: ShortTableRow[] = [];
+
+  mainTable.map((row, index, array) => {
+    // количество дней в году для текущей даты
+    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+    
+    // проверка на изменение ключевых параметров
+    const setNewShortRow = 
+          lastRow?.in !== row.in || 
+          lastRow?.out !== row.out || 
+          lastRow?.percent !== row.percent ||
+          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
+
+    if (setNewShortRow) {
+      currentShortRow = {
+        s: row.date,
+        e: row.date,
+        i: row.in,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: row.penalty  
+      } as ShortTableRow;
+      if (lastShortRow) {
+        rows.push(lastShortRow);
+      } else {
+        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
+      }
+    } else {
+      if (!currentShortRow) return;
+      const penalty = row.penalty === undefined ? 0 : row.penalty;
+      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
+      currentShortRow = {
+        s: currentShortRow.s,
+        e: row.date,
+        i: currentShortRow.i,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: sumPenalty  
+      }
+      if (array.length - 1 === index) {
+        rows.push(currentShortRow);
+      }
+    }
+
+    if (currentShortRow === null) currentShortRow = {
+      s: row.date,
+      e: row.date,
+      ...row
+    } as ShortTableRow;
+
+    lastShortRow = currentShortRow;
+    // после проверки текущий ряд сохраняем в переменную
+    lastRow = row;
+    lastDaysInYear = daysInYear;
+  });
+
+  let sum = 0;
+
+  // do inputs
+  const inputsArr: [string,string,string,string][] = [];
+  rows.forEach(row => {
+    const start = row.s.toLocaleDateString();
+    const end = row.e.toLocaleDateString();
+    
+    const oneDay = 1000 * 60 * 60 * 24;
+    // Вычисление разницы во времени между двумя датами
+    const diffInTime = row.e.getTime() - row.s.getTime();
+    // Вычисление количества дней между двумя датами
+    const diffInDays = Math.round(diffInTime / oneDay);
+
+    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+
+    const sumin = row.i;
+    const inc = row.inc;
+    const dec = row.dec;
+    const sumout = row.o;
+    const percent = Number(row.pcnt); // процент в год
+    const penalty = Number(row.plty);
+
+    const pen = Number(penalty.toFixed(4));
+    sum = sum + pen;
+    
+    const inputRow: any = [];
+
+    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
+
+    inputRow.push(`${start} - ${end}`); // период
+    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
+    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
+    inputRow.push(`${pen}`); // проценты
+    inputsArr.push(inputRow);
+  });
+
+  const inputsTable: InputsCalcTable[] = [
+    {
+      "title": "Расчёт процентов (неустойки)",
+      "Calculation": inputsArr,
+      "sum": `Итого: ${sum.toFixed(2).toString()}`,
+      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
+    }
+  ];
+
+  // генерация PDF с обработкой результата через обратный вызов
+  doGeneratePdf(templateCalcTable, inputsTable, ID, sendDocumentBlob );
+}
+
+// Почти тоже самое что и doPDF, но с отправкой файла выбранному пользователю
+function sendPDF(
+  mainTable: MainTableRow[],
+  InitialData?: any,
+  setEventStatus?: (data: string) => void
+) {
+
+  const EventStatus = 'Отправка PDF выбранному пользователю...';
+  setEventStatus && setEventStatus(EventStatus);
+  const ID = InitialData || '';
+  
+  let currentShortRow: ShortTableRow | null = null; // текущая строка
+
+  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
+  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+  let lastDaysInYear = 365; // количество дней в году по умолчанию
+
+  let rows: ShortTableRow[] = [];
+
+  mainTable.map((row, index, array) => {
+    // количество дней в году для текущей даты
+    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+    
+    // проверка на изменение ключевых параметров
+    const setNewShortRow = 
+          lastRow?.in !== row.in || 
+          lastRow?.out !== row.out || 
+          lastRow?.percent !== row.percent ||
+          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
+
+    if (setNewShortRow) {
+      currentShortRow = {
+        s: row.date,
+        e: row.date,
+        i: row.in,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: row.penalty  
+      } as ShortTableRow;
+      if (lastShortRow) {
+        rows.push(lastShortRow);
+      } else {
+        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
+      }
+    } else {
+      if (!currentShortRow) return;
+      const penalty = row.penalty === undefined ? 0 : row.penalty;
+      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
+      currentShortRow = {
+        s: currentShortRow.s,
+        e: row.date,
+        i: currentShortRow.i,
+        inc: row.inc,
+        dec: row.dec,
+        o: row.out,
+        pcnt: row.percent,
+        plty: sumPenalty  
+      }
+      if (array.length - 1 === index) {
+        rows.push(currentShortRow);
+      }
+    }
+
+    if (currentShortRow === null) currentShortRow = {
+      s: row.date,
+      e: row.date,
+      ...row
+    } as ShortTableRow;
+
+    lastShortRow = currentShortRow;
+    // после проверки текущий ряд сохраняем в переменную
+    lastRow = row;
+    lastDaysInYear = daysInYear;
+  });
+
+  let sum = 0;
+
+  // do inputs
+  const inputsArr: [string,string,string,string][] = [];
+  rows.forEach(row => {
+    const start = row.s.toLocaleDateString();
+    const end = row.e.toLocaleDateString();
+    
+    const oneDay = 1000 * 60 * 60 * 24;
+    // Вычисление разницы во времени между двумя датами
+    const diffInTime = row.e.getTime() - row.s.getTime();
+    // Вычисление количества дней между двумя датами
+    const diffInDays = Math.round(diffInTime / oneDay);
+
+    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+
+    const sumin = row.i;
+    const inc = row.inc;
+    const dec = row.dec;
+    const sumout = row.o;
+    const percent = Number(row.pcnt); // процент в год
+    const penalty = Number(row.plty);
+
+    const pen = Number(penalty.toFixed(4));
+    sum = sum + pen;
+    
+    const inputRow: any = [];
+
+    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
+
+    inputRow.push(`${start} - ${end}`); // период
+    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
+    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
+    inputRow.push(`${pen}`); // проценты
+    inputsArr.push(inputRow);
+  });
+
+  const inputsTable: InputsCalcTable[] = [
+    {
+      "title": "Расчёт процентов (неустойки)",
+      "Calculation": inputsArr,
+      "sum": `Итого: ${sum.toFixed(2).toString()}`,
+      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
+    }
+  ];
+  
+  doGeneratePdf(templateCalcTable, inputsTable, ID, sendPreparedBlob );
+}*/
