@@ -206,9 +206,31 @@ function sendDocumentBlob(
                                     ReplyKeyboardMarkup или 
                                     ReplyKeyboardRemove или 
                                     ForceReply	              По выбору     Дополнительные параметры интерфейса. Сериализованный в формате JSON объект для встроенной клавиатуры, пользовательской клавиатуры для ответов, инструкций по удалению клавиатуры для ответов или по принудительному ответу пользователя
+  ------------------------------------------------------------------------------
+ 
+  Отправка файлов
+  -------------
+  Есть три способа отправить файлы (фотографии, стикеры, аудио, мультимедиа и т. д.):
+
+  Если файл уже сохранён где-то на серверах Telegram, вам не нужно загружать его повторно: у каждого объекта файла есть поле file_id, просто передайте этот file_id в качестве параметра вместо загрузки. Ограничений на отправку файлов таким способом нет.
+  Укажите Telegram URL-адрес HTTP для отправки файла. Telegram загрузит и отправит файл. Максимальный размер фотографий — 5 МБ, других типов контента — 20 МБ.
+  Отправьте файл с помощью multipart/form-data обычным способом, как при загрузке файлов через браузер. Максимальный размер фотографий — 10 МБ, других файлов — 50 МБ.
+  Отправка по идентификатору файла
+
+  При повторной отправке по идентификатору файла невозможно изменить тип файла. То есть видео нельзя отправить как фотографию, фотографию нельзя отправить как документ и т. д.
+  Повторная отправка миниатюр невозможна.
+  При повторной отправке фотографии по идентификатору файла будут отправлены все её размеры.
+  Идентификатор файла уникален для каждого отдельного бота и не может быть передан от одного бота другому.
+  file_id однозначно идентифицирует файл, но у одного и того же файла могут быть разные допустимые file_id даже для одного и того же бота.
+  Отправка по URL
+
+  При отправке по URL целевой файл должен иметь правильный тип MIME (например, audio/mpeg для sendAudio и т. д.).
+  В sendDocument отправка по URL в настоящее время работает только для файлов .PDF и .ZIP.
+  Чтобы использовать функцию sendVoice, файл должен быть в формате audio/ogg и иметь размер не более 1 МБ. Голосовые заметки размером от 1 до 20 МБ будут отправляться в виде файлов.
+  Другие конфигурации могут работать, но мы не можем гарантировать это.
   */
   
-  //FD.append('business_connection_id', business_connection_id);
+  //FD.append('business_connection_id', business_connection_id);                    // необязательный параметр, уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
   FD.append('chat_id', chat_id);                                                    // обязательный параметр, идентификатор целевого чата, в который будет отправлен файл
   //FD.append('message_thread_id', message_thread_id);                              // необязательный параметр, идентификатор целевой ветки (темы) форума, в который будет отправлен файл
   FD.append('document', blob, 'calculation.pdf');                                   // обязательный параметр, файл для отправки
@@ -216,9 +238,9 @@ function sendDocumentBlob(
   FD.append('caption', params && params?.caption || '');                            // необязательный параметр, заголовок документа 
   //FD.append('parse_mode', parse_mode);                                            // необязательный параметр, режим для анализа сущностей в заголовке документа
   //FD.append('caption_entities', caption_entities);                                // необязательный параметр, список специальных сущностей
-  //FD.append('disable_content_type_detection', disable_content_type_detection);    // необязательный параметр
-  //FD.append('disable_notification', disable_notification);                        // необязательный параметр
-  //FD.append('protect_content', protect_content);                                  // необязательный параметр
+  //FD.append('disable_content_type_detection', disable_content_type_detection);    // необязательный параметр, отключает автоматическое определение типа контента на стороне сервера для файлов, загруженных с помощью multipart/form-data
+  //FD.append('disable_notification', disable_notification);                        // необязательный параметр,
+  //FD.append('protect_content', protect_content);                                  // необязательный параметр, защищает содержимое отправленного сообщения от пересылки и сохранения
   //FD.append('allow_paid_broadcast', pallow_paid_broadcast);                       // необязательный параметр
   //FD.append('message_effect_id', message_effect_id);                              // необязательный параметр
   //FD.append('reply_parameters', reply_parameters);                                // необязательный параметр
@@ -307,35 +329,120 @@ function sendPreparedBlob(
   ////////////////////////////////////////
   
   /*
+  savePreparedInlineMessage
+  ------------------------------------
+  Сохраняет сообщение, которое может быть отправлено пользователем мини-приложения. Возвращает объект PreparedInlineMessage.
+
+  Параметр	              Тип	                Обязательный	    Описание
+  --------------------------------------------------------------------------------------
+  user_id	                Integer	            Да	              Уникальный идентификатор целевого пользователя, который может использовать подготовленное сообщение
+  result	                InlineQueryResult	  Да 	              Объект в формате JSON, описывающий отправляемое сообщение
+  allow_user_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с пользователями
+  allow_bot_chats	        Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с ботами
+  allow_group_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые и супергрупповые чаты
+  allow_channel_chats	    Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые чаты
+
+  PreparedInlineMessage
+  ------------------------------------
+  Описывает встроенное сообщение, которое может быть отправлено пользователем мини-приложения.
+
+  Поле	                  Тип	                                  Описание
+  --------------------------------------------------------------------------------------
+  id	                    String	                              Уникальный идентификатор подготовленного сообщения
+  expiration_date	        Integer	                              Дата истечения срока действия подготовленного сообщения по времени Unix. Подготовленные сообщения с истекшим сроком действия больше нельзя использовать
+
+  InlineQueryResult
+  ------------------------------------
+  Этот объект представляет собой один результат встроенного запроса. В настоящее время клиенты Telegram поддерживают результаты следующих 20 типов:
+
+  InlineQueryResultCachedAudio
+  InlineQueryResultCachedDocument
+  InlineQueryResultCachedGif
+  InlineQueryResultCachedMpeg4Gif
+  InlineQueryResultCachedPhoto
+  InlineQueryResultCachedSticker
+  InlineQueryResultCachedVideo
+  InlineQueryResultCachedVoice
+  InlineQueryResultArticle
+  InlineQueryResultAudio
+  InlineQueryResultContact
+  InlineQueryResultGame
+  InlineQueryResultDocument
+  InlineQueryResultGif
+  InlineQueryResultLocation
+  InlineQueryResultMpeg4Gif
+  InlineQueryResultPhoto
+  InlineQueryResultVenue
+  InlineQueryResultVideo
+  InlineQueryResultVoice
+*/
+
+/*
+  InlineQueryResultDocument
+  ------------------------------------
+  Представляет собой ссылку на файл. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content, чтобы отправить сообщение с указанным содержимым вместо файла. В настоящее время с помощью этого метода можно отправлять только файлы .PDF и .ZIP.
+
+  Поле	                  Тип	                                  Описание
+  --------------------------------------------------------------------------------------
+  type	                  String	                              Тип результата встроенного запроса, должен быть указан document
+  id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
+  title	                  String	                              Название для результата встроенного запроса
+  caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
+  parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+  caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+  document_url	          String	                              Допустимый URL-адрес для файла
+  mime_type	              String	                              MIME-тип содержимого файла: «application/pdf» или «application/zip»
+  description	            String	                              По выбору. Краткое описание результата
+  reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
+  input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
+  thumbnail_url	          String	                              По выбору. URL-адрес миниатюры (только в формате JPEG) для файла
+  thumbnail_width	        Integer	                              По выбору. Ширина миниатюры
+  thumbnail_height	      Integer	                              По выбору. Высота миниатюры
+  */
   const doc = {
-    type: 'document',
-    id: 1,
-    title: 'Документ 1',
-    description: 'Описание документа 1',
-    caption: 'Подпись документа 1',
-    document_url: URL.createObjectURL(blob),
-    mime_type: 'application/pdf'
-  }
+    type: 'document',                                           // тип результата встроенного запроса
+    id: 1,                                                      // уникальный идентификатор этого результата
+    title: 'Документ 1',                                        // название для результата встроенного запроса
+    caption: 'Подпись документа 1',                             // заголовок отправляемого документа
+    //parse_mode: 'HTML',                                       // режим для анализа сущностей в заголовке
+    //caption_entities: [],                                     // список специальных сущностей
+    document_url: URL.createObjectURL(blob),                    // URL-адрес для файла
+    mime_type: 'application/pdf',                               // MIME-тип содержимого файла
+    description: 'Описание документа 1',                        // краткое описание результата
+    //reply_markup: {},                                         // встроенная клавиатура
+    //input_message_content: {},                                // содержимое отправляемого сообщения
+    //thumbnail_url: '',                                        // URL-адрес миниатюры
+    //thumbnail_width: 0,                                       // ширина миниатюры
+    //thumbnail_height: 0                                       // высота миниатюры
+  };
+
+/*
+  InlineQueryResultCachedDocument
+  ------------------------------------
+  Представляет собой ссылку на файл, хранящийся на серверах Telegram. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content для отправки сообщения с указанным содержимым вместо файла.
+
+  Поле	                  Тип	                                  Описание
+  --------------------------------------------------------------------------------------
+  type	                  String	                              Тип результата встроенного запроса, должен быть указан document
+  id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
+  title	                  String	                              Название для результата встроенного запроса
+  document_file_id	      String	                              Действительный идентификатор для этого файла
+  description	            String	                              По выбору. Краткое описание результата
+  caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
+  parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+  caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+  reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
+  input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
   */
+  const doccached = {
+    type: 'document',                                           // тип результата встроенного запроса
+    id: 2,                                                      // уникальный идентификатор этого результата
+  };
   
-  /*
-  Field	                  Type	                  Description
-  ----------------------	----------------------	----------------------------------------
-  type	                  String	                Type of the result, must be document
-  id	                    String	                Unique identifier for this result, 1-64 bytes
-  title	                  String	                Title for the result
-  caption	                String	                Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
-  parse_mode	            String	                Optional. Mode for parsing entities in the document caption. See formatting options for more details.
-  caption_entities	      Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-  document_url	          String	                A valid URL for the file
-  mime_type	              String	                MIME type of the content of the file, either “application/pdf” or “application/zip”
-  description	            String	                Optional. Short description of the result
-  reply_markup	          InlineKeyboardMarkup	  Optional. Inline keyboard attached to the message
-  input_message_content	  InputMessageContent	    Optional. Content of the message to be sent instead of the file
-  thumbnail_url	          String	                Optional. URL of the thumbnail (JPEG only) for the file
-  thumbnail_width	        Integer	                Optional. Thumbnail width
-  thumbnail_height	      Integer	                Optional. Thumbnail height
-  */
+  console.log('doc: ', doc);
+  console.log('doccached: ', doccached);
+  
+  
   console.log('test send');
 
   const FD = new FormData();
@@ -650,13 +757,21 @@ export const Calc: FC<CalcProps> = ({type}) => {
     
 
       setRows(newShortTable);
-
+/*
+      getCurrRates((result) => {
+        console.log('test: ', result);
+      });
+*/
+      
       getCurrencies().then((result)=>{
         // устанавливаем курс доллара и евро
         setUSD(result.USD);
         setEUR(result.EUR);
         console.log(result);
+      }).catch((error) => {
+        console.log('Ошибка: ', error);
       });
+      
       
     }
   }, [debt, datefrom, dateto, rate, periodtype]);

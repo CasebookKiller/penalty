@@ -65,15 +65,41 @@ export function doKeyRatesTable() {
   return keyArray;//setKeyRatesTable(keyArray);
 }
 
-
-export async function getCurrencies() {
+/*
+export function getCurrRates(cb: (result: any) => void) {
   const date = new Date();
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
+  const rateRequestUrl = `https://www.cbr-xml-daily.ru/archive/${year}/${month}/${'21'}/daily_json.js`;
+
+    
+  fetch(rateRequestUrl)
+    .then(response => {
+      console.log('request request: ', response)
+      return(response.json());
+    })
+    .then((data) => {
+      console.log('data: ',data);
+      cb(data);
+    });
+  
+
+  //getCurrencies().then((result) => {
+  //  cb(result);
+  //});
+}
+*/
+
+export async function getCurrencies(lastdate?: string) {
+  const date = lastdate ? new Date(lastdate) : new Date();
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
   const rateRequestUrl = `https://www.cbr-xml-daily.ru/archive/${year}/${month}/${day}/daily_json.js`;
-  // const rateRequestUrl = 'https://www.cbr-xml-daily.ru/daily_json.js';
+  //const rateRequestUrl = 'https://www.cbr-xml-daily.ru/daily_json.js';
   // https://www.cbr-xml-daily.ru/archive/2025/04/08/daily_json.js
+  
   const response = await fetch(rateRequestUrl);
   const data = await response.json();
   const result = await data;

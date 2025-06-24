@@ -1,14 +1,12 @@
 import { themeParams } from '@telegram-apps/sdk-react';
-import type { FC } from 'react';
+import { type FC } from 'react';
 
 import { DisplayData } from '@/components/DisplayData/DisplayData.tsx';
 
 export const ThemeParamsPage: FC = () => {
   console.log('ThemeParamsPage: ', window.location);
   console.log('history:', history);
-
-  themeParams.mount();
-
+  
   return (
     <div>
       <DisplayData
