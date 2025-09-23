@@ -111,6 +111,10 @@ body {
   white-space: nowrap;
 }
 
+.app.wrap {
+  text-wrap: wrap;
+}
+
 .app.overflow-ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -122,4 +126,13 @@ body {
 
 .app.cursor-pointer {
   cursor: var(--app-cursor-pointer);
+}
+
+.btntest.p-disabled {
+  background-color: var(--tg-theme-secondary-bg-color)!important;
+  border-color: var(--tg-theme-hint-color)!important;
+}
+.btntest.p-disabled * {
+  color: var(--tg-theme-hint-color)!important;
+  fill: var(--tg-theme-hint-color)!important;
 }

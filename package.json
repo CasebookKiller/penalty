@@ -14,6 +14,8 @@
     "predeploy": "npm run build"
   },
   "dependencies": {
+    "@liquid-js/qr-code-styling": "file:../qr-code-styling",
+    "@liquid-js/qrcode-generator": "^1.1.0",
     "@pdfme/common": "^5.3.15",
     "@pdfme/generator": "^5.3.15",
     "@pdfme/schemas": "^5.3.15",
@@ -28,7 +30,7 @@
     "date-fns": "^4.1.0",
     "docx": "^9.3.0",
     "eruda": "^3.4.1",
-    "generate-react-cli": "^8.4.9",
+    "generate-react-cli": "^9.0.1",
     "html2pdf.js": "^0.10.3",
     "jsoncrush": "^1.1.8",
     "primeflex": "^3.3.1",

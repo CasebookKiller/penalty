@@ -1,8 +1,8 @@
 const erudaon = false;
 
-import { type FC, useEffect, useMemo } from 'react';
+import { type FC, useEffect/*, useMemo */} from 'react';
 import { PrimeReactProvider } from 'primereact/api';
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
+//import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { retrieveLaunchParams } from '@telegram-apps/bridge';
 
 import { App } from '@/components/App';
@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary.tsx';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import { backButton, init, miniApp, themeParams, viewport } from '@telegram-apps/sdk-react';
+import React from 'react';
 
 const ErrorBoundaryError: FC<{ error: unknown }> = ({ error }) => (
   <div>
@@ -63,9 +64,9 @@ const Inner: FC<InnerProps> = ({ Component, pageProps }) => {
   const debug = startParam === 'debug';
   console.log('Режим отладки:', debug);
   
-  const manifestUrl = useMemo(() => {
+  /*const manifestUrl = useMemo(() => {
     return new URL(import.meta.env.VITE_APP_FOLDER + 'tonconnect-manifest.json', window.location.href).toString();
-  }, []);
+  }, []);*/
 
   // Включите режим отладки, чтобы просмотреть все отправленные методы и полученные события.
   useEffect(() => {
@@ -76,11 +77,13 @@ const Inner: FC<InnerProps> = ({ Component, pageProps }) => {
   }, [debug]);
 
   return (
-    <TonConnectUIProvider manifestUrl={manifestUrl}>
+    <React.Fragment>
+    {/*<TonConnectUIProvider manifestUrl={manifestUrl}>*/}
       <PrimeReactProvider>
         <Component {...pageProps}/>
       </PrimeReactProvider>
-    </TonConnectUIProvider>
+    {/*</TonConnectUIProvider>*/}
+    </React.Fragment>
   );
 };
 

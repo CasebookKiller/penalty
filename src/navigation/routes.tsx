@@ -1,12 +1,12 @@
 import type { ComponentType, JSX } from 'react';
 
 import { IndexPage } from '@/pages/IndexPage/IndexPage';
-import { InitDataPage } from '@/pages/InitDataPage/InitDataPage';
-import { LaunchParamsPage } from '@/pages/LaunchParamsPage/LaunchParamsPage.tsx';
-import { ThemeParamsPage } from '@/pages/ThemeParamsPage/ThemeParamsPage.tsx';
-import { TONConnectPage } from '@/pages/TONConnectPage/TONConnectPage';
-import { MissionsPage } from '@/pages/MissionsPage/MissionsPage';
-import { SupabasePage } from '@/pages/SupabasePage/SupabasePage';
+//import { InitDataPage } from '@/pages/InitDataPage/InitDataPage';
+//import { LaunchParamsPage } from '@/pages/LaunchParamsPage/LaunchParamsPage.tsx';
+//import { ThemeParamsPage } from '@/pages/ThemeParamsPage/ThemeParamsPage.tsx';
+//import { TONConnectPage } from '@/pages/TONConnectPage/TONConnectPage';
+//import { MissionsPage } from '@/pages/MissionsPage/MissionsPage';
+//import { SupabasePage } from '@/pages/SupabasePage/SupabasePage';
 
 
 export interface Route {
@@ -61,6 +61,7 @@ export interface Route {
 }
 */
 
+/*
 const tonicon = <svg
     xmlns="http://www.w3.org/2000/svg"
     width="100%"
@@ -77,16 +78,25 @@ const tonicon = <svg
       fill="white"
     />
   </svg>;
+*/
 
 const index: Route = { path: '/', Component: IndexPage, title: 'Главная' };
-const initdata: Route = { path: '/init-data', Component: InitDataPage, title: 'Данные инициализации' };
-const themeparams: Route = { path: '/theme-params', Component: ThemeParamsPage, title: 'Параметры темы' };
-const launchparams: Route = { path: '/launch-params', Component: LaunchParamsPage, title: 'Параметры запуска' };
-const tonconnect: Route = { path: '/ton-connect', Component: TONConnectPage, title: 'TON Connect', icon: ( tonicon ) };
-const missions: Route = { path: '/missions', Component: MissionsPage, title: 'Задания' };
-const supabase: Route = { path: '/supabase', Component: SupabasePage, title: 'База данных' };
+//const initdata: Route = { path: '/init-data', Component: InitDataPage, title: 'Данные инициализации' };
+//const themeparams: Route = { path: '/theme-params', Component: ThemeParamsPage, title: 'Параметры темы' };
+//const launchparams: Route = { path: '/launch-params', Component: LaunchParamsPage, title: 'Параметры запуска' };
+//const tonconnect: Route = { path: '/ton-connect', Component: TONConnectPage, title: 'TON Connect', icon: ( tonicon ) };
+//const missions: Route = { path: '/missions', Component: MissionsPage, title: 'Задания' };
+//const supabase: Route = { path: '/supabase', Component: SupabasePage, title: 'База данных' };
 
 export const routes: Route[] = [];
 
-routes.push(index, initdata, themeparams, launchparams, tonconnect, missions, supabase);
+routes.push(
+  index,
+//  initdata,
+//  themeparams,
+//  launchparams,
+//  tonconnect,
+//  missions,
+//  supabase
+);
   

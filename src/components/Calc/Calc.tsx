@@ -1,15 +1,39 @@
 //https://pdfme.com/docs/getting-started
+//https://stackoverflow.com/questions/51202460/inlinequeryresultarticle-of-answerinlinequery-in-telegram-bot-api-with-google-ap
 
 import * as RU from '../../locale/ru.json';
 import * as jsoncrush from 'jsoncrush';
 
-import { dateFromString, getDayOfYear, getDays, doKeyRatesTable, templateCalcTable, InputsCalcTable, CalcProps, DebtRow, ShortTableRow, MainTableRow, getCurrencies } from './common';
+import { 
+  isWorkingDay,
+  updateCurrencyRates,
+  dateFromString,
+  getDayOfYear,
+  getDays,
+  doKeyRatesTable,
+  templateCalcTable,
+  InputsCalcTable,
+  CalcProps,
+  DebtRow,
+  ShortTableRow,
+  MainTableRow,
+  NumToB64,
+  //NumFromB64,
+  shortDate,
+  fromCalcB64Data,
+  sharelink,
+} from './common';
 
-import { FC, useEffect, useState } from 'react';
+const txtColor = import.meta.env.VITE_TXT_COLOR;
+const accentTextColor = import.meta.env.VITE_ACCENT_TEXT_COLOR || '';
+//const backgroundColor = import.meta.env.VITE_BACKGROUND_COLOR || '';
+//const hintColor = import.meta.env.VITE_HINT_COLOR || '';
+
+import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 //text, barcodes, image,
 import { Template } from '@pdfme/common';
-import { text, table } from '@pdfme/schemas';
+import { text, table, /*date*/ } from '@pdfme/schemas';
 import { generate } from '@pdfme/generator';
 
 import { openTelegramLink, retrieveLaunchParams } from '@telegram-apps/sdk-react';
@@ -29,13 +53,22 @@ import { classNames } from 'primereact/utils';
 import { AppSection } from '../AppSection/AppSection';
 
 import { Document, Packer, Paragraph, TextRun } from 'docx';
-import { botMethod, PreparedInlineMessage } from '@/api/bot/methods';
+
+import { QRCodeStyling } from '@liquid-js/qr-code-styling';
+
+import { botMethod, PreparedInlineMessage, deleteMessage } from '@/api/bot/methods';
 
 import './Calc.css';
+//import { BoxArrowRight, ChatLeftDots, QrCodeScan } from 'react-bootstrap-icons';
+import { Dialog } from 'primereact/dialog';
+import React from 'react';
 
 //import { segodnya } from './functions';
 addLocale('ru', RU.ru);
 locale('ru');
+
+const today = new Date();
+console.log("is working day: ", isWorkingDay(today.getFullYear(),today.getMonth()+1,today.getDate()));
 
 const debtdecrease = [
   // после отладки удалить
@@ -57,29 +90,12 @@ const currencies = [
   { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
 ];
 
-// Вспомогательная функция для создания файла с расчётом
-/*
-*** Расчёт процентов по ст.395 ГК РФ
-период / задолженность / расчёт процентов(неустойки) / сумма процентов(неустойки)
---------------------------------------------------------------------------------------------
-01.02.2025 - 10.02.2025    100000 +         0 -         0 =    100000 0.0575%  10    575.34
-11.02.2025 - 11.02.2025    100000 +         0 -      1000 =     99000 0.0575%   1     57.53
-12.02.2025 - 12.02.2025     99000 +      3000 -         0 =    102000 0.0575%   1     58.68
-13.02.2025 - 10.03.2025    102000 +         0 -         0 =    102000 0.0575%  26   1525.81
-11.03.2025 - 11.03.2025    102000 +         0 -      2000 =    100000 0.0575%   1     58.68
-12.03.2025 - 12.03.2025    100000 +      2000 -         0 =    102000 0.0575%   1     58.68
-13.03.2025 - 10.04.2025    102000 +         0 -         0 =    102000 0.0575%  29   1701.86
-11.04.2025 - 11.04.2025    102000 +         0 -      3000 =     99000 0.0575%   1     58.68
-12.04.2025 - 12.04.2025     99000 +      1000 -         0 =    100000 0.0575%   1     57.53
-13.04.2025 - 30.04.2025    100000 +         0 -         0 =    100000 0.0575%  18   1035.62
---------------------------------------------------------------------------------------------
-*/
-
 // Интерфейс параметров для функции обратного вызова для обработки blob PDF
 interface IParamsDoWithPDF {
   sendAdmin?: boolean;            // Признак отправки админу
   cb?: (result: any) => void;     // Обработка результата обратного вызова
   caption?: string;               // Заголовок
+  type?: number;                  // Тип расчета
 }
 
 // Интерфейс функции обратного вызова для обработки blob PDF
@@ -91,18 +107,28 @@ interface IDoWithPDF {
   ) : void 
 }
 
+export const PrimeReactFlex = ({ children }: { children: ReactNode }) => {
+  return (
+    <div className="p-inputgroup flex-1">
+      {children}
+    </div>
+  )
+}
+
 function doGeneratePdf(
   template: Template,                 // Шаблон
   inputs: InputsCalcTable[],          // Входные данные
   InitialData: any,                   // Данные инициализации приложения
   cb: IDoWithPDF,                     // Функция обратного вызова
-  caption?: string                    // Заголовок
+  caption?: string,                   // Заголовок
+  //type?: number                     // Тип расчета
 ) {
+  
   generate({
     template: template,
     inputs: inputs,
     plugins: { Text: text, Table: table },
-  }).then((pdf) => {
+  }).then((pdf: any) => {
     // Блоб файла PDF с расчётом
     const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
     
@@ -120,44 +146,6 @@ function doGeneratePdf(
     };
     cb(blob, ID, params); 
     // console.log('PDF: ', pdf);
-  });
-}
-
-// Удаление сообщений в чате
-function deleteMessage(
-  chat_id: number,
-  message_id: number
-) {
-  /*
-  deleteMessage
-  ---------------------------------------------------------------------------------------------
-  Используйте этот метод для удаления сообщений, в том числе служебных, со следующими ограничениями:
-  - Сообщение может быть удалено, только если оно было отправлено менее 48 часов назад.
-  - Служебные сообщения о создании супергруппы, канала или темы на форуме удалить невозможно.
-  - Сообщение dice в приватном чате можно удалить, только если оно было отправлено более 24 часов назад.
-  - Боты могут удалять исходящие сообщения в приватных чатах, группах и супергруппах.
-  - Боты могут удалять входящие сообщения в личных чатах.
-  - Боты с разрешением can_post_messages могут удалять исходящие сообщения в каналах.
-  - Если бот является администратором группы, он может удалить любое сообщение в ней.
-  - Если у бота есть разрешение can_delete_messages в супергруппе или канале, он может удалить любое сообщение в них.
-  При успешном выполнении возвращает True.
-
-  Параметр    Тип                 Обязательный  Описание
-  ---------------------------------------------------------------------------------------------
-  chat_id     Integer или String  Да            Уникальный идентификатор целевого чата или имя пользователя целевого канала (в формате @channelusername)
-  message_id  Integer             Да            Идентификатор сообщения, которое требуется удалить.
-  */
-  const FD = new FormData();
-  FD.append('chat_id', chat_id.toString());
-  FD.append('message_id', message_id.toString());
-  
-  botMethod(
-    'deleteMessage',
-    FD
-  ).then((result: any) => {
-    console.log(result);
-  }).catch((error)=>{
-    console.log(error);
   });
 }
 
@@ -182,53 +170,6 @@ function sendDocumentBlob(
     console.log('admin_id:', admin_id);
     chat_id = admin_id;
   }
-  /*
-    sendDocument
-    Используйте этот метод для отправки обычных файлов. В случае успеха отправленное сообщение будет возвращено. В настоящее время боты могут отправлять файлы любого типа размером до 50 МБ, но в будущем это ограничение может быть изменено.
-
-    Параметр                        Тип                       Обязательный  Описание
-    --------------------------------------------------------------------------------
-    business_connection_id	        String	                  По выбору     Уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
-    chat_id                         Integer или String	      Да	          Уникальный идентификатор целевого чата или имя пользователя целевого канала (в формате @channelusername)
-    message_thread_id	              Integer	                  По выбору     Уникальный идентификатор целевой ветки (темы) форума; только для супергрупп форума
-    document	                      InputFile или String      Да	          Файл для отправки. Передайте file_id в виде строки, чтобы отправить файл, который существует на серверах Telegram (рекомендуется), передайте URL-адрес HTTP в виде строки, чтобы Telegram получил файл из Интернета, или загрузите новый файл с помощью multipart/form-data. Подробнее об отправке файлов »
-    thumbnail	                      InputFile или String	    По выбору     Эскиз отправленного файла; можно игнорировать, если создание эскиза для файла поддерживается на стороне сервера. Эскиз должен быть в формате JPEG и иметь размер менее 200 КБ. Ширина и высота эскиза не должны превышать 320. Игнорируется, если файл не загружается с помощью multipart/form-data. Эскизы нельзя использовать повторно, их можно загружать только как новый файл, поэтому вы можете передать «attach://<имя_файла_приложения>», если эскиз был загружен с помощью multipart/form-data под <именем_файла_приложения>. Подробнее об отправке файлов »
-    caption	                        String	                  По выбору     Заголовок документа (также может использоваться при повторной отправке документов по идентификатору файла), 0-1024 символа после разбора сущностей
-    parse_mode	                    String	                  По выбору     Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
-    caption_entities	              Array of MessageEntity	  По выбору     Сериализованный в формате JSON список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
-    disable_content_type_detection	Boolean	                  По выбору     Отключает автоматическое определение типа контента на стороне сервера для файлов, загруженных с помощью multipart/form-data
-    disable_notification	          Boolean	                  По выбору     Отправляет сообщение без звука. Пользователи получат уведомление без звука.
-    protect_content	                Boolean	                  По выбору     Защищает содержимое отправленного сообщения от пересылки и сохранения
-    allow_paid_broadcast	          Boolean	                  По выбору     Установите значение True, чтобы разрешать отправку до 1000 сообщений в секунду, игнорируя ограничения на трансляцию, за плату в 0,1 звезды Telegram за сообщение. Соответствующие звезды будут списаны с баланса бота
-    message_effect_id	              String	                  По выбору     Уникальный идентификатор эффекта сообщения, который будет добавлен к сообщению; только для личных чатов
-    reply_parameters	              ReplyParameters	          По выбору     Описание сообщения, на которое нужно ответить
-    reply_markup	                  InlineKeyboardMarkup или 
-                                    ReplyKeyboardMarkup или 
-                                    ReplyKeyboardRemove или 
-                                    ForceReply	              По выбору     Дополнительные параметры интерфейса. Сериализованный в формате JSON объект для встроенной клавиатуры, пользовательской клавиатуры для ответов, инструкций по удалению клавиатуры для ответов или по принудительному ответу пользователя
-  ------------------------------------------------------------------------------
- 
-  Отправка файлов
-  -------------
-  Есть три способа отправить файлы (фотографии, стикеры, аудио, мультимедиа и т. д.):
-
-  Если файл уже сохранён где-то на серверах Telegram, вам не нужно загружать его повторно: у каждого объекта файла есть поле file_id, просто передайте этот file_id в качестве параметра вместо загрузки. Ограничений на отправку файлов таким способом нет.
-  Укажите Telegram URL-адрес HTTP для отправки файла. Telegram загрузит и отправит файл. Максимальный размер фотографий — 5 МБ, других типов контента — 20 МБ.
-  Отправьте файл с помощью multipart/form-data обычным способом, как при загрузке файлов через браузер. Максимальный размер фотографий — 10 МБ, других файлов — 50 МБ.
-  Отправка по идентификатору файла
-
-  При повторной отправке по идентификатору файла невозможно изменить тип файла. То есть видео нельзя отправить как фотографию, фотографию нельзя отправить как документ и т. д.
-  Повторная отправка миниатюр невозможна.
-  При повторной отправке фотографии по идентификатору файла будут отправлены все её размеры.
-  Идентификатор файла уникален для каждого отдельного бота и не может быть передан от одного бота другому.
-  file_id однозначно идентифицирует файл, но у одного и того же файла могут быть разные допустимые file_id даже для одного и того же бота.
-  Отправка по URL
-
-  При отправке по URL целевой файл должен иметь правильный тип MIME (например, audio/mpeg для sendAudio и т. д.).
-  В sendDocument отправка по URL в настоящее время работает только для файлов .PDF и .ZIP.
-  Чтобы использовать функцию sendVoice, файл должен быть в формате audio/ogg и иметь размер не более 1 МБ. Голосовые заметки размером от 1 до 20 МБ будут отправляться в виде файлов.
-  Другие конфигурации могут работать, но мы не можем гарантировать это.
-  */
   
   //FD.append('business_connection_id', business_connection_id);                    // необязательный параметр, уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
   FD.append('chat_id', chat_id);                                                    // обязательный параметр, идентификатор целевого чата, в который будет отправлен файл
@@ -246,7 +187,7 @@ function sendDocumentBlob(
   //FD.append('reply_parameters', reply_parameters);                                // необязательный параметр
   
   //////////////////////////
-  // при вызове только savePreparedInlineMessage расчёт отправлять админу, с последующим удалением сообщения кэшированного файла
+  // при вызове только savePreparedInlineMessage расчёт отправлять боту, с последующим удалением сообщения кэшированного файла
   // deleteMessage с обязательными мараметрами chat_id и message_id
   
   botMethod(
@@ -285,208 +226,107 @@ function sendPreparedBlob(
   // Выполнить все Этапы
   // 1. Создание документа
   // 2. Получение документа в формате Blob
-  // 3. Отправка документа админу
+  // 3. Отправка документа боту
   // 4. Получение id отправленного документа
   // 5. Создание InlineQueryResultCachedDocument
   // 6, savePreparedInlineMessage
+  // 7. Удаление сообщения у бота
   const ID = InitialData || '';
   console.log(blob);
   // обрабатываем Blob PDF
+   
+  // создание документа для сохранения его на сервере telegram
+  let doccached = {
+    type: 'document',                                           // тип результата встроенного запроса
+    id: 2,                                                      // уникальный идентификатор этого результата
+    title: params && params.caption || 'Расчет неустойки (процентов)',                      // название для результата встроенного запроса
+    description: 'Расчет на основании введенных параметров',                // краткое описание результата
+    caption: params && params.caption || 'Расчет неустойки (процентов)',                    // заголовок отправляемого документа
+    document_file_id: '',                                       // Действительный идентификатор для этого файла
+  };
 
-  /*window.open(URL.createObjectURL(blob));
-
-  const FD = new FormData();
-  FD.append('chat_id', ID?.user?.id.toString() || '');
-  FD.append('document', blob, 'calc.pdf');
+  const SavedFD = new FormData();
+  const chat_id = ID?.user?.id.toString() || '';
+  //const admin_id = import.meta.env.VITE_ADMIN_ID;
+  let saved_chat_id = chat_id;
+  //SavedFD.append('business_connection_id', business_connection_id);                    // необязательный параметр, уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
+  SavedFD.append('chat_id', saved_chat_id);                                                    // обязательный параметр, идентификатор целевого чата, в который будет отправлен файл
+  //SavedFD.append('message_thread_id', message_thread_id);                              // необязательный параметр, идентификатор целевой ветки (темы) форума, в который будет отправлен файл
+  SavedFD.append('document', blob, 'calculation.pdf');                                   // обязательный параметр, файл для отправки
+  //SavedFD.append('thumbnail', thumbnail, 'calculation.png');                           // необязательный параметр, эскиз отправленного файла
+  SavedFD.append('caption', params && params?.caption || '');                            // необязательный параметр, заголовок документа 
+  console.log('%c caption: ', `color: white; background-color: green;`, params && params?.caption || '');
+  //SavedFD.append('parse_mode', parse_mode);                                            // необязательный параметр, режим для анализа сущностей в заголовке документа
+  //SavedFD.append('caption_entities', caption_entities);                                // необязательный параметр, список специальных сущностей
+  //SavedFD.append('disable_content_type_detection', disable_content_type_detection);    // необязательный параметр, отключает автоматическое определение типа контента на стороне сервера для файлов, загруженных с помощью multipart/form-data
+  //SavedFD.append('disable_notification', disable_notification);                        // необязательный параметр,
+  //SavedFD.append('protect_content', protect_content);                                  // необязательный параметр, защищает содержимое отправленного сообщения от пересылки и сохранения
+  //SavedFD.append('allow_paid_broadcast', pallow_paid_broadcast);                       // необязательный параметр
+  //SavedFD.append('message_effect_id', message_effect_id);                              // необязательный параметр
+  //SavedFD.append('reply_parameters', reply_parameters);                                // необязательный параметр
+  
+  // **************************************************
   botMethod(
     'sendDocument',
-    FD
-  ).then((result) => {
-    console.log(result);
-    if (openTelegramLink.isAvailable()) {
-      openTelegramLink('https://t.me/'+import.meta.env.VITE_BOT_NAME);
+    SavedFD
+  ).then((result: any) => {
+    const payload = result.payload;
+    console.log('%c payload: ', 'color: white; background-color: red;', payload);
+    // получение id файла с документом
+    doccached.document_file_id = result.payload?.result.document.file_id;
+    console.log('%c saved id: %o','background: aquamarine; color: black;', doccached.document_file_id);
+    
+    //params?.cb && params.cb(result);
+
+    const FD = new FormData();
+
+    if (params?.sendAdmin) {
+      // Если указана отправка сообщения админу
     }
+
+    FD.append('user_id', ID?.user?.id.toString() || '');
+    FD.append('result', JSON.stringify(doccached));
+    FD.append('allow_user_chats', 'true');
+    FD.append('allow_bot_chats', 'true');
+    FD.append('allow_group_chats', 'true');
+    FD.append('allow_channel_chats', 'true');
+    
+    botMethod(
+      'savePreparedInlineMessage',
+      FD
+    ).then((result: any) => {
+
+      window.addEventListener('message', ({ data }) => {
+        console.log(data);
+      });
+
+      console.log(result);
+      params?.cb && params.cb(result); // объединить вывод в консоль
+
+      const PIM: PreparedInlineMessage = result.payload?.result;
+      console.log(PIM.id);
+      postEvent('web_app_send_prepared_message', {
+        id: PIM.id.toString()
+      });
+      on('prepared_message_sent', (data) => { 
+        console.log(data);
+        // убрать setEventStatus
+        //setEventStatus && setEventStatus(String(data));
+        deleteMessage(chat_id, payload.result.message_id);
+      });
+      on('prepared_message_failed', (data) => {
+        console.log(data);
+        //setEventStatus && setEventStatus(String(data));
+      });
+    }).catch((error) => {
+      console.log(error);
+    });
+    
   }).catch((error)=>{
     console.log(error);
   });
-  */
-  
-  const msg = {
-    type: 'article',
-    id: 1,
-    title: 'Заголовок 1',
-    description: 'Описание 1',
-    caption: params?.caption || '',
-    input_message_content: {
-      'message_text': 'А это текст сообщения 1'
-    }
-  };
-
-  ////////////////////////////////////////
-  ////////////////////////////////////////
-  // ПОРА РЕАЛИЗОВАТЬ ОТПРАВКУ PDF
-  ////////////////////////////////////////
-  ////////////////////////////////////////
-  
-  /*
-  savePreparedInlineMessage
-  ------------------------------------
-  Сохраняет сообщение, которое может быть отправлено пользователем мини-приложения. Возвращает объект PreparedInlineMessage.
-
-  Параметр	              Тип	                Обязательный	    Описание
-  --------------------------------------------------------------------------------------
-  user_id	                Integer	            Да	              Уникальный идентификатор целевого пользователя, который может использовать подготовленное сообщение
-  result	                InlineQueryResult	  Да 	              Объект в формате JSON, описывающий отправляемое сообщение
-  allow_user_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с пользователями
-  allow_bot_chats	        Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с ботами
-  allow_group_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые и супергрупповые чаты
-  allow_channel_chats	    Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые чаты
-
-  PreparedInlineMessage
-  ------------------------------------
-  Описывает встроенное сообщение, которое может быть отправлено пользователем мини-приложения.
-
-  Поле	                  Тип	                                  Описание
-  --------------------------------------------------------------------------------------
-  id	                    String	                              Уникальный идентификатор подготовленного сообщения
-  expiration_date	        Integer	                              Дата истечения срока действия подготовленного сообщения по времени Unix. Подготовленные сообщения с истекшим сроком действия больше нельзя использовать
-
-  InlineQueryResult
-  ------------------------------------
-  Этот объект представляет собой один результат встроенного запроса. В настоящее время клиенты Telegram поддерживают результаты следующих 20 типов:
-
-  InlineQueryResultCachedAudio
-  InlineQueryResultCachedDocument
-  InlineQueryResultCachedGif
-  InlineQueryResultCachedMpeg4Gif
-  InlineQueryResultCachedPhoto
-  InlineQueryResultCachedSticker
-  InlineQueryResultCachedVideo
-  InlineQueryResultCachedVoice
-  InlineQueryResultArticle
-  InlineQueryResultAudio
-  InlineQueryResultContact
-  InlineQueryResultGame
-  InlineQueryResultDocument
-  InlineQueryResultGif
-  InlineQueryResultLocation
-  InlineQueryResultMpeg4Gif
-  InlineQueryResultPhoto
-  InlineQueryResultVenue
-  InlineQueryResultVideo
-  InlineQueryResultVoice
-*/
-
-/*
-  InlineQueryResultDocument
-  ------------------------------------
-  Представляет собой ссылку на файл. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content, чтобы отправить сообщение с указанным содержимым вместо файла. В настоящее время с помощью этого метода можно отправлять только файлы .PDF и .ZIP.
-
-  Поле	                  Тип	                                  Описание
-  --------------------------------------------------------------------------------------
-  type	                  String	                              Тип результата встроенного запроса, должен быть указан document
-  id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
-  title	                  String	                              Название для результата встроенного запроса
-  caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
-  parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
-  caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
-  document_url	          String	                              Допустимый URL-адрес для файла
-  mime_type	              String	                              MIME-тип содержимого файла: «application/pdf» или «application/zip»
-  description	            String	                              По выбору. Краткое описание результата
-  reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
-  input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
-  thumbnail_url	          String	                              По выбору. URL-адрес миниатюры (только в формате JPEG) для файла
-  thumbnail_width	        Integer	                              По выбору. Ширина миниатюры
-  thumbnail_height	      Integer	                              По выбору. Высота миниатюры
-  */
-  const doc = {
-    type: 'document',                                           // тип результата встроенного запроса
-    id: 1,                                                      // уникальный идентификатор этого результата
-    title: 'Документ 1',                                        // название для результата встроенного запроса
-    caption: 'Подпись документа 1',                             // заголовок отправляемого документа
-    //parse_mode: 'HTML',                                       // режим для анализа сущностей в заголовке
-    //caption_entities: [],                                     // список специальных сущностей
-    document_url: URL.createObjectURL(blob),                    // URL-адрес для файла
-    mime_type: 'application/pdf',                               // MIME-тип содержимого файла
-    description: 'Описание документа 1',                        // краткое описание результата
-    //reply_markup: {},                                         // встроенная клавиатура
-    //input_message_content: {},                                // содержимое отправляемого сообщения
-    //thumbnail_url: '',                                        // URL-адрес миниатюры
-    //thumbnail_width: 0,                                       // ширина миниатюры
-    //thumbnail_height: 0                                       // высота миниатюры
-  };
-
-/*
-  InlineQueryResultCachedDocument
-  ------------------------------------
-  Представляет собой ссылку на файл, хранящийся на серверах Telegram. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content для отправки сообщения с указанным содержимым вместо файла.
-
-  Поле	                  Тип	                                  Описание
-  --------------------------------------------------------------------------------------
-  type	                  String	                              Тип результата встроенного запроса, должен быть указан document
-  id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
-  title	                  String	                              Название для результата встроенного запроса
-  document_file_id	      String	                              Действительный идентификатор для этого файла
-  description	            String	                              По выбору. Краткое описание результата
-  caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
-  parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
-  caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
-  reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
-  input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
-  */
-  const doccached = {
-    type: 'document',                                           // тип результата встроенного запроса
-    id: 2,                                                      // уникальный идентификатор этого результата
-  };
-  
-  console.log('doc: ', doc);
+  // **************************************************
   console.log('doccached: ', doccached);
-  
-  
-  console.log('test send');
-
-  const FD = new FormData();
-
-  if (params?.sendAdmin) {
-    // Если указана отправка сообщения админу
-  }
-
-  FD.append('user_id', ID?.user?.id.toString() || '');
-  FD.append('result', JSON.stringify(msg));
-  FD.append('allow_user_chats', 'true');
-  FD.append('allow_bot_chats', 'true');
-  FD.append('allow_group_chats', 'true');
-  FD.append('allow_channel_chats', 'true');
-  
-  botMethod(
-    'savePreparedInlineMessage',
-    FD
-  ).then((result: any) => {
-
-    window.addEventListener('message', ({ data }) => {
-      console.log(data);
-    });
-
-    console.log(result);
-    params?.cb && params.cb(result); // объединить вывод в консоль
-
-    const PIM: PreparedInlineMessage = result.payload?.result;
-    console.log(PIM.id);
-    postEvent('web_app_send_prepared_message', {
-      id: PIM.id.toString()
-    });
-    on('prepared_message_sent', (data) => { 
-      console.log(data);
-      // убрать setEventStatus
-      //setEventStatus && setEventStatus(String(data)); 
-    });
-    on('prepared_message_failed', (data) => {
-      console.log(data);
-      //setEventStatus && setEventStatus(String(data));
-    });
-  }).catch((error) => {
-    console.log(error);
-  });
 }
 
 // Функция на замену doPDF и sendPDF
@@ -494,7 +334,8 @@ function doWithCalculation(
   mainTable: MainTableRow[],
   InitialData?: any,
   func?: IDoWithPDF,
-  setEventStatus?: (data: string) => void
+  setEventStatus?: (data: string) => void,
+  caption?: string
 ) {
 
   const EventStatus = 'Обработка результата расчёта ...';
@@ -604,16 +445,18 @@ function doWithCalculation(
     inputsArr.push(inputRow);
   });
 
+  const title = caption;
+
   const inputsTable: InputsCalcTable[] = [
     {
-      "title": "Расчёт процентов (неустойки)",
+      "title": title || "Расчёт процентов (неустойки)",
       "Calculation": inputsArr,
       "sum": `Итого: ${sum.toFixed(2).toString()}`,
       "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
     }
   ];
   
-  func && doGeneratePdf(templateCalcTable, inputsTable, ID, func, 'Расчёт процентов (неустойки)' );
+  func && doGeneratePdf(templateCalcTable, inputsTable, ID, func, caption );
 }
   /*
   const pdf_content = { content: "<h1>Welcome to html-pdf-node-ts</h1>" };
@@ -644,37 +487,30 @@ export const Calc: FC<CalcProps> = ({type}) => {
   const [periodtype, setPeriodType] = useState(1); // 1 - День, 2 - Год
   const [USD, setUSD] = useState(0);
   const [EUR, setEUR] = useState(0);
-  console.log('USD: ', USD);
-  console.log('EUR: ', EUR);
-  // Платежи в погашение долга
-  const [DebtDecrease, setDebtDecrease] = useState<DebtRow[]>(debtdecrease);
-
-  // Увеличение долга
-  const [DebtIncrease, setDebtIncrease] = useState<DebtRow[]>(debtincrease);
-
-  // usestate
+  const [DebtDecrease, setDebtDecrease] = useState<DebtRow[]>(debtdecrease); // Платежи в погашение долга
+  const [DebtIncrease, setDebtIncrease] = useState<DebtRow[]>(debtincrease); // Увеличение долга
   const [Rows, setRows] = useState<ShortTableRow[]>(); // текущая группа
-  
   const [sum, setSum] = useState(0);
-
   const [crushedData, setCrushedData] = useState<string>('');
+  const [
+    eventStatus, 
+    setEventStatus
+  ] = useState<string>(''); // Статусы события
 
-  const [eventStatus, setEventStatus] = useState<string>(''); // Статусы события
+  const [dialogQRVisible, setDialogQRVisible] = useState(false);
+  const [url, setUrl] = useState<string>('');
+
+  console.log('eventStatus: ', eventStatus);
 
   // Define Mini Apps event handlers to receive 
   // events from the Telegram native application.
   // defineEventHandlers();
 
-  const LP = retrieveLaunchParams();
-  console.log('LaunchParams: ', LP);
+  const LP = retrieveLaunchParams(); console.log('LaunchParams: ', LP);
   const tgWebAppData = LP?.tgWebAppData;
-  const ID = tgWebAppData;
-  //const IDRaw = retrieveRawInitData();
+  const ID = tgWebAppData; console.log('ID: ', ID?.user?.id);
 
-  //const LP = useLaunchParams();
-  //const ID = LP.initData;
-  console.log('ID: ', ID?.user?.id);
-
+  /*
   function doCalcData(): [
         [number | undefined, number, number, number, number],
         [number, number],
@@ -688,7 +524,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
     const increase = DebtIncrease.map((item) => {
       const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
         return result;
-}    );
+      }
+    );
 
     const from = datefrom !== undefined ? Number(datefrom.toLocaleDateString().replace('.','').replace('.','')) : 0;
     const to = dateto !== undefined ? Number(dateto.toLocaleDateString().replace('.','').replace('.','')) : 0;
@@ -699,32 +536,99 @@ export const Calc: FC<CalcProps> = ({type}) => {
               [decrease, increase]
             ];
   }
+  */
+
+  function doCalcB64Data(): [
+        string,
+        string,
+        string[],
+        string[]
+    ] {
+      // использовать вместо вложенного массива строку разделенными точками
+      const decrease = DebtDecrease.map((item) => {
+          const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
+          return result;
+        }
+      );
+      const increase = DebtIncrease.map((item) => {
+        const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
+          return result;
+        }
+      );
+
+      const from = datefrom !== undefined ? NumToB64(Number(shortDate(datefrom).replace('.','').replace('.',''))) : '0';
+      const to = dateto !== undefined ? NumToB64(Number(shortDate(dateto).replace('.','').replace('.',''))) : '0';
+
+      const base = (type ? NumToB64(type) : '') + '.' +
+                    NumToB64(debt) + '.' +
+                    NumToB64(currency) + '.' +
+                    NumToB64(rate) + '.' +
+                    NumToB64(periodtype);
+      const period = (from + '.' + to);
+
+      return  [
+                // вместо массива строка, разделенная точками
+                base,
+                period,
+                decrease,
+                increase
+              ];
+  }
 
   // Сжатие параметров расчёта для url
+  /*
   function crushedCalcData() {
     const calcData = doCalcData();
-    const crushed = jsoncrush.default.crush(JSON.stringify(calcData));
+    const calcB64Data = doCalcB64Data();
+    const crushed = jsoncrush.default.crush(JSON.stringify(calcData)).replace(/\u0001/g, '%01');
     setCrushedData(crushed);
-    console.log('crushed length: ', crushed.length);
+    const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
     return crushed;
+  }
+  */
+
+  function crushedCalcB64Data() {
+    const calcB64Data = doCalcB64Data();
+    const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
+    setCrushedData(crushedB64);
+    return crushedB64;
   }
 
   // Получение параметров расчёта из url
   function uncrushedCalcData(crushed?: string) {
-    const uncrushed = crushed !== undefined ? JSON.parse(jsoncrush.default.uncrush(crushed)) : crushedData;
-    console.log('uncrushed: %o', uncrushed);
+    const uncrushed = crushed !== undefined ? JSON.parse(jsoncrush.default.uncrush(crushed.replace(/%01/g, '\u0001'))) : crushedData;
     return uncrushed;
   }
 
   useEffect(() => {
+    console.log('%cUSD: ','color: cyan;', USD);
+    console.log('%cEUR: ','color: cyan;', EUR);
+  },[USD, EUR]);
+
+  useEffect(() => {
+
+    updateCurrencyRates(setUSD, setEUR);
+    
     if (datefrom && dateto) {
       const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
       //setMainTable(newMainTable);
       const newShortTable = doShortTable(newMainTable);
-      const calcData = doCalcData();
-      console.log(calcData);
-      console.log('crushedCalcData: ', crushedCalcData());
-      uncrushedCalcData(crushedCalcData()); // удалить после тестирования
+      const calcB64Data = doCalcB64Data();
+      console.log(calcB64Data);
+      console.log('crushedCalcB64Data: ', crushedCalcB64Data());
+      
+      // clc + bro
+      const u = crushedCalcB64Data();
+      const a = uncrushedCalcData(u); // удалить после тестирования
+
+      console.log(fromCalcB64Data(a));
+
+      const bro = Number(ID?.user?.id);
+      const b64 = NumToB64(bro);
+      console.log('bro64: ', b64);
+      const link = sharelink(b64, u);
+      setUrl(link);
+      console.log('URL: ', ''+link);
 
       const doc = new Document({
         sections: [
@@ -733,13 +637,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
             children: [
               new Paragraph({
                 children: [
-                  new TextRun("Hello World"),
+                  new TextRun(title),
                   new TextRun({
-                      text: "Foo Bar",
+                      text: title,
                       bold: true,
                   }),
                   new TextRun({
-                      text: "\tGithub is the best",
+                      text: "\tCasebook{killer} is the best",
                       bold: true,
                   }),
                 ],
@@ -754,25 +658,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
         let dataURL = URL.createObjectURL(blob);
         console.log(dataURL);
       });
-    
-
       setRows(newShortTable);
-/*
-      getCurrRates((result) => {
-        console.log('test: ', result);
-      });
-*/
-      
-      getCurrencies().then((result)=>{
-        // устанавливаем курс доллара и евро
-        setUSD(result.USD);
-        setEUR(result.EUR);
-        console.log(result);
-      }).catch((error) => {
-        console.log('Ошибка: ', error);
-      });
-      
-      
     }
   }, [debt, datefrom, dateto, rate, periodtype]);
   
@@ -780,7 +666,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
     console.log('rate', rate);
     console.log('periodtype', periodtype);
   }, [rate, periodtype]);
-
 
   const periodtypes = [
     {
@@ -792,7 +677,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
       value: 2,
     }
   ]
-
 
   function getMaxDebtRowId( array: DebtRow[] ) {
     let maxId = 0;
@@ -808,7 +692,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
     let lastDaysInYear = 365; // количество дней в году
 
     let rows: ShortTableRow[] = [];
-
 
     mainTable.map((row, index, array) => {
       const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
@@ -903,10 +786,10 @@ export const Calc: FC<CalcProps> = ({type}) => {
     let line = new Array(maxLenth + 1).join( '-' );
     line = line + '\n';
     
-    print = '*** Расчёт процентов по ст.395 ГК РФ\n\n' + line + print;
+    print = '*** '+title+'\n\n' + line + print;
     print = print + line;
     console.log (print);
-    console.log('Сумма процентов: ', sum.toFixed(2));
+    console.log('Сумма: ', sum.toFixed(2));
     /** принт тест */
 
     setSum(sum);
@@ -920,7 +803,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
     rate?: number, // ставка
     periodType?: number // 1 - день, 2 - год
   ) {
-    console.log('type: ', type !==1 ? 'Расчёт процентов по ст.395 ГК РФ': 'Расчёт договорной неустойки');
+    const title = type !==1 ? 'Расчёт процентов по ст.395 ГК РФ': 'Расчёт договорной неустойки';
+    console.log('type: ', title);
     console.log('rate: ', rate );
         
     const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
@@ -1000,8 +884,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
     console.log('newMainTable: ', newMainTable);
     return newMainTable;
   }
-
-  
 
   //console.log('getMaxDebtRowId: ', getMaxDebtRowId(DebtPayments));
 
@@ -1213,6 +1095,348 @@ export const Calc: FC<CalcProps> = ({type}) => {
     );
   }
 
+
+  function QRCode_Styling({text}: {text: string}) {
+    const LP = retrieveLaunchParams();
+    const tgWebAppData = LP?.tgWebAppData;
+    const ID = tgWebAppData;
+    
+    const cardFront = 'Чёрное на белом';
+    const cardBack = 'Белое на чёрном';
+    const [isFlipped, setFlipped] = useState(false);
+
+    const refCanvas = useRef<HTMLCanvasElement>(null);
+    const refCanvasBW = useRef<HTMLCanvasElement>(null);
+
+    const handleFlip = () => {
+      setFlipped(!isFlipped);
+    };
+
+    const qrCodeWB = new QRCodeStyling({
+      data: text,
+      //image: "https://casebookkiller.github.io/poshlina-dev/Logo.svg",
+      shape: 'square',
+      dotsOptions: {
+        color: 'white',
+        type: 'random-dot',
+        size: 18,
+      },
+      cornersSquareOptions: {
+        color: 'white',
+        type: 'extra-rounded'
+      },
+      cornersDotOptions: {
+        color: 'white',
+        type: 'extra-rounded'
+      },
+      backgroundOptions: {
+        color: 'black',//'rgba(0,0,0,0)',//backgroundColor,
+        margin: 1
+      },
+      imageOptions: {
+        crossOrigin: 'anonymous',
+        margin: 1,
+        imageSize: 0.5
+      }
+    });
+
+    const qrCodeBW = new QRCodeStyling({
+      data: text,
+      //image: "https://casebookkiller.github.io/poshlina-dev/Logo.svg",
+      shape: "square",
+      dotsOptions: {
+        color: 'black',
+        type: "random-dot",
+        size: 18,
+      },
+      cornersSquareOptions: {
+        color: 'black',
+        type: "extra-rounded"
+      },
+      cornersDotOptions: {
+        color: 'black',
+        type: "extra-rounded"
+      },
+      backgroundOptions: {
+        color: 'white',
+        margin: 1
+      },
+      imageOptions: {
+        crossOrigin: "anonymous",
+        margin: 1,
+        imageSize: 0.5
+      }
+    });
+
+    useEffect(() => {
+      console.log('%cQRCode: %o', `color: ${txtColor}`, qrCodeWB);
+      console.log('%cQRCodeBW: %o', `color: ${txtColor}`, qrCodeBW);
+      
+      function getSize(qrCode: QRCodeStyling) {
+        return {width: qrCode.size?.width, height: qrCode.size?.height};
+      }
+
+      const size = getSize(qrCodeWB);
+      console.log(size);
+
+      const sizebw = getSize(qrCodeBW);
+      console.log(sizebw);
+      
+      // белое на чёрном 
+      qrCodeWB.serialize().then((code) => {
+        if (code !== undefined) {
+          let dataURL = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(code);
+          
+          let canvas: HTMLCanvasElement = document.getElementById('canvaswb') as HTMLCanvasElement;
+          
+          canvas.width = size.width || 0;
+          canvas.height = size.height || 0;
+          
+          let ctx:any;
+          if (canvas?.getContext) {
+            ctx = canvas.getContext('2d');
+          } else {
+            console.error('Canvas element not found');
+          }
+
+          let _img = new Image();
+          _img.width = 1024;
+          _img.height = 1024;
+          
+          _img.addEventListener('load', e => {
+            ctx.drawImage(e.target, 0, 0);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                console.log(url);
+              }
+            })
+          });
+
+          _img.src = dataURL;
+        }
+      });
+
+      //qrCodeWB.append(document.getElementById('canvaswb') as HTMLCanvasElement);
+      // черное на белом
+      qrCodeBW.serialize().then((code) => {
+        if (code !== undefined) {
+          let dataURL = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(code);
+          let canvasbw: HTMLCanvasElement = document.getElementById('canvasbw') as HTMLCanvasElement;
+          
+          canvasbw.width = size.width || 0;
+          canvasbw.height = size.height || 0;
+          
+          let ctx:any;
+          if (canvasbw?.getContext) {
+            ctx = canvasbw.getContext('2d');
+          } else {
+            console.error('Canvas element not found');
+          }
+
+          let _img = new Image();
+          _img.width = 1024;
+          _img.height = 1024; 
+
+          _img.addEventListener('load', e => {
+            ctx.drawImage(e.target, 0, 0);
+
+            canvasbw.toBlob((blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                console.log(url);
+              }
+            })
+          });
+
+          _img.src = dataURL;
+        }
+      });
+    }, []);
+    
+    return (
+      <React.Fragment>
+        <PrimeReactProvider value={{unstyled: false}}>
+          <div className="App" style={{
+            display: 'flex',
+            justifyContent: 'center',
+            minHeight:'370px',
+            width:'auto',
+            overflowY: 'hidden',
+          }}>
+            <div className="QRFlip">
+              <h4 style={{color: accentTextColor, margin: '0px 0px 10px 0px'}}>Нажми для изменения цвета</h4>
+              <div className="container">
+                <div
+                  className={`flip-card ${
+                    isFlipped ? "flipped" : ""
+                  }`}
+                >
+                  <div className="flip-card-inner">
+                    <div className="flip-card-front">
+                      <div
+                        className="card-content"
+                        onClick={handleFlip}
+                      >
+                        {cardFront}
+                        <div className='placeholder'>
+                          <canvas ref={refCanvasBW} className="square" id='canvasbw' style={{
+                            display:'block',
+                            padding: 0,
+                            maxWidth: '234px',
+                            maxHeight: '234px',
+                          }}/>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='flip-card-back'>
+                      <div
+                        className='card-content'
+                        onClick={handleFlip}
+                      >
+                        {cardBack}
+                        <div className='placeholder'>
+                          <canvas
+                            ref={refCanvas}
+                            className='square'
+                            id='canvaswb'
+                            style={{
+                              display:'block',
+                              padding: 0,
+                              maxWidth: '234px',
+                              maxHeight: '234px',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className='flex mt-1'>  
+                  <PrimeReactFlex>
+                    <Button
+                      id='btnSendToChat'
+                      style={{ 
+                        width: '100%',
+                        minWidth: '145px',
+                        height: '34px',
+                        fontSize: '12px'
+                      }}
+                      onClick={() => {
+                        let canvas: HTMLCanvasElement;
+                        if (isFlipped) {
+                          canvas = document.getElementById('canvaswb') as HTMLCanvasElement;
+                        } else {
+                          canvas = document.getElementById('canvasbw') as HTMLCanvasElement;
+                        }
+                        
+                        canvas.toBlob((blob) => {
+                          //////
+                          // сюда перенести логику с соохранением ссылка на расчёт
+                          //////
+                          if (blob) {
+                            
+                            //const sou = courtType === 'obsh' ? human(sum) : '';
+                            //const arb = courtType === 'arb' ? human(sum) : '';
+                            //const url = sharelink(sou, arb, benefitsSwitch, discount30Switch, discount50Switch, userid); 
+                            
+                            //const url = 'https://casebookkiller.github.io/';
+                            console.log('url: ', url);
+                            
+                            //const caption = posh ? `<b>При обращении в ${courtType === 'obsh' ? 'суд общей юрисдикции' : 'арбитражный суд'}</b>\n\nс ценой иска: <b>${human(sum)} руб.</b>\n\nРазмер пошлины составляет:\n\n<b>${human(posh)} руб.</b>\n\n<a href='${url}'>Открыть расчёт</a>`: '';
+                            const caption = 'расчёт';
+
+                            let formData = new FormData();
+                            formData.append('chat_id', ID?.user?.id.toString() || '');
+                            formData.append('parse_mode', 'html');
+                            formData.append('caption', caption);
+                            //formData.append('caption_entities', JSON.stringify([]));
+                            formData.append('photo', blob, 'qr.png');
+                            botMethod(
+                              'sendPhoto',
+                              formData
+                            ).then((result) => {
+                              console.log(result);
+                              setDialogQRVisible(false);
+                              //setPopupQRVisible(false);
+                              if (openTelegramLink.isAvailable()) {
+                                openTelegramLink('https://t.me/'+import.meta.env.VITE_BOT_NAME);
+                              }
+                            }).catch((error) => {
+                              console.log(error);
+                            })
+                            //downloadBlob(blob);
+                            //copyToClipboard(data);
+                          }
+                        });
+
+                      }}
+                    >
+                      <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                        {/*<ChatLeftDots/>*/}
+                        <span style={{marginLeft:'5px', fontWeight: 'normal'}}>Сохранить в чат</span>
+                      </div>
+                    </Button>
+                    <Button
+                      label="Закрыть"
+                      onClick={() => setDialogQRVisible(false)}
+                      autoFocus
+                      className='ml-2'
+                      style={{ width: '80%', height: '34px', fontSize: '12px'}}
+                    />
+                    {/*
+                    <Button
+                      style={{
+                        height: '34px',
+                        fontSize: '12px',
+                        backgroundColor: backgroundColor,
+                        color: hintColor,
+                        alignItems: 'center',
+                        borderColor: hintColor
+                      }}
+                      onClick={() => {
+                        setPopupQRVisible(false);
+                      }}
+                    >
+                      <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                        <BoxArrowRight/>
+                        <span style={{marginLeft:'5px', fontWeight: 'normal'}}>Закрыть</span>
+                      </div>
+                    </Button>
+                    */}
+                  </PrimeReactFlex>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </PrimeReactProvider>
+      </React.Fragment>
+    );
+  }
+
+  const MockContentWithQRCode = () => {
+    return (
+      <>
+        <div style={{ padding: '40px 20px 10px' }}>
+          <QRCode_Styling text={url}/>
+        </div>
+      </>
+      )
+  }
+  const headerQRModal = (
+    <div className="inline-flex align-items-center justify-content-center gap-2">
+      <span className="font-bold white-space-nowrap">QR-код с расчётом</span>
+    </div>
+  );
+
+  /*const footerQRModal = (
+    <div>
+      <Button label="Закрыть" icon="pi pi-check" onClick={() => setDialogQRVisible(false)} autoFocus />
+    </div>
+  );*/
+
   return (
     <div className='calc'>
       <PrimeReactProvider>
@@ -1366,20 +1590,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
           borderBottom
         />
         {/* --раздел-- */}
-        {/*<AppSection 
-          subheader={'Таблица'}
-          body={
-            <DataTable value={products} size='small'>
-              <Column field='id' header='#' />
-              <Column field='name' header='Наименование' />
-              <Column field='count' header='Количество' body={ countBodyTemplate } />
-            </DataTable>
-          }
-          subheaderNoWrap
-          borderBottom
-        />*/}
-        
-        {/* --раздел-- */}
         { Rows && <AppSection
           header={'Расчёт'}
           subheader={type !== 1 ? 'Расчёт процентов за пользование чужими денежными средствами, в соответствии со статьей 395 ГК РФ' : 'Расчёт неустойки производится в соответствии с условиями договора'}
@@ -1405,196 +1615,96 @@ export const Calc: FC<CalcProps> = ({type}) => {
           borderBottom
         />}
         {/* --раздел-- */}
-        <AppSection
+        {/*<AppSection
           header={'Заголовок 1'}
           subheader={'Подзаголовок 1'}
           body={'Текст 1'}
           subheaderNoWrap
           borderBottom
-        />
+        />*/}
         {/* --раздел-- */}
         <AppSection
-          header={'Заголовок 2'}
-          subheader={'Подзаголовок 2'}
+          header={'Сохранение расчёта'}
+          subheader={<div className='app wrap justify-content-between flex'>Вы можете отправить расчёт в формате PDF другому пользователю или сохранить его в чате с ботом приложения.</div>}
           body={
-            <div style={{width: '100%'}} className='flex justify-content-start'>
+            <div style={{width: '100%'}} className='flex'>
+              <Dialog
+                visible={dialogQRVisible}
+                modal
+                //maximizable={true}
+                //maximized={true}
+                header={headerQRModal}
+                //footer={footerQRModal}
+                style={{ width: '50rem' }}
+                onHide={() => {if (!dialogQRVisible) return; setDialogQRVisible(false); }}
+              >
+                <MockContentWithQRCode />
+              </Dialog>
+              <Button
+                className='btntest mt-2 flex-initial flex align-items-center justify-content-center'
+                icon="pi pi-qrcode"
+                disabled={!datefrom || !dateto}
+                onClick={
+                  () => {
+                    if (datefrom && dateto) {
+                      setDialogQRVisible(true);
+                    }
+                  }
+                }
+              />
+              <Button
+                className='btntest ml-1 mt-2 flex-initial flex align-items-center justify-content-center'
+                icon="pi pi-share-alt"
+                disabled={!datefrom || !dateto}
+                onClick={
+                  () => {
+                    // необходимо получить id документа и передать его в sendPDF
+                    if (datefrom && dateto) {
+                      const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
+                      //sendPDF(newMainTable, ID, setEventStatus);
+                      doWithCalculation(newMainTable, ID, sendPreparedBlob, setEventStatus, title)
+                    }
+                  }
+                }
+              >
+                {/*Поделиться расчётом*/}
+              </Button>
+              {/*<span>{ eventStatus }</span>*/}
                 <Button
-                  className='btntest mt-2'
+                  className='btntest ml-1 mt-2 flex-initial flex align-items-center justify-content-center'
+                  icon="pi pi-save"
+                  iconPos='right'
+                  disabled={!datefrom || !dateto}
                   onClick={
                     () => {
-                      // необходимо получить id документа и передать его в sendPDF
                       if (datefrom && dateto) {
                         const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
-                        //sendPDF(newMainTable, ID, setEventStatus);
-                        doWithCalculation(newMainTable, ID, sendPreparedBlob, setEventStatus)
+                        //doPDF(newMainTable, ID);
+                        // new version
+                        doWithCalculation(newMainTable, ID, sendDocumentBlob, setEventStatus, title );
                       }
-
-                      /*
-                      const msg = {
-                        type: 'article',
-                        id: 1,
-                        title: 'Заголовок 1',
-                        description: 'Описание 1',
-                        caption: 'Подпись 1',
-                        input_message_content: {
-                          'message_text': 'А это текст сообщения 1'
-                        }
-                      };
-                      const doc = {
-                        type: 'document',
-                        id: 1,
-                        title: 'Документ 1',
-                        description: 'Описание документа 1',
-                        caption: 'Подпись документа 1',
-                        document_url: 'https://google.com',
-                        mime_type: 'application/pdf'
-                      }
-                      
-                      console.log('test');
-                      
-                      //interface FormData {
-                      //  yoo: typeof FormData.prototype.append;
-                      //}
-                      
-                      //FormData.prototype.yoo = FormData.prototype.append;
-
-                      const FD = new FormData();
-                      
-                      //FormData.prototype.add = FormData.prototype.append;
-                      //console.log('id: ', ID?.user?.id);
-                      FD.append('user_id', ID?.user?.id.toString() || '');
-                      FD.append('result', JSON.stringify(msg));
-                      FD.append('allow_user_chats', 'true');
-                      FD.append('allow_bot_chats', 'true');
-                      FD.append('allow_group_chats', 'true');
-                      FD.append('allow_channel_chats', 'true');
-                      // web_app_send_prepared_message
-                      botMethod(
-                        'savePreparedInlineMessage',
-                        FD
-                      ).then((result: any) => {
-
-                        window.addEventListener('message', ({ data }) => {
-                          //const { eventType, eventData } = JSON.parse(data);
-                          console.log(data);
-                        });
-
-                        console.log(result);
-                        //console.log(result.payload?.result?.status);
-                        const PIM: PreparedInlineMessage = result.payload?.result;
-                        console.log(PIM.id);
-                        //const D = new FormData();
-                        //D.append('inline_message_id', PIM.id.toString());
-                        
-                        //console.log(`window: `, window);
-                        //botMethod('SentWebAppMessage', D);
-                        postEvent('web_app_send_prepared_message', {id: PIM.id.toString()});
-                        on('prepared_message_sent', (data) => { console.log(data); setEventStatus(String(data)); });
-                        on('prepared_message_failed', (data) => { console.log(data); setEventStatus(String(data)); });
-                                    
-                      }).catch((error) => {
-                        console.log(error);
-                      });
-                      */
-
-                      /*
-                      //your bot token placed here
-                      const token = "";
-                      tgmsg('answerInlineQuery', {
-
-                          "inline_query_id": update['inline_query']['id'],
-                          "results": JSON.stringify([
-                              //inline result of an article with thumbnail photo
-                              {
-                                  "type": "article",
-                                  "id": "1",
-                                  "title": "chek inline keybord ",
-                                  "description": "test ",
-                                  "caption": "caption",
-                                  "input_message_content": {
-                                      "message_text": "you can share inline keyboard to other chat"
-                                  },
-
-                                  "thumb_url": "https://avatars2.githubusercontent.com/u/10547598?v=3&s=88"
-                              },
-                              //inline result of an article with inline keyboard
-                              {
-                                  id: "nchfjdfgd",
-                                  title: 'title',
-                                  description: "description",
-                                  type: 'article',
-                                  input_message_content: {
-                                      message_text: "inline is enabled input_message_content: {message_text: message_text}message_text"
-                                  },
-                                  reply_markup: {
-                                      "inline_keyboard": [
-                                          [{
-                                              "text": "InlineFeatures.",
-                                              "callback_data": "inline_plugs_1118095942"
-                                          }],
-                                          [{
-                                              "text": "OtherFeatures.",
-                                              "callback_data": "other_plugs_1118095942"
-                                          }]
-                                      ]
-                                  }
-                              },
-
-                              //inline result of a cached telegram document with inline keyboard
-                              {
-                                  id: "nchgffjdfgd",
-                                  title: 'title',
-                                  description: "description",
-                                  //change this on with the value of file_id from telegram bot api 
-                                  document_file_id: "BQACAgQAAxkBAAIBX2CPrD3yFC0X1sI0HFTxgul0GdqhAALjDwACR4pxUKIV48XlktQNHwQ",
-                                  type: 'document',
-                                  caption: "caption ghh hhdd",
-                                  reply_markup: {
-                                      "inline_keyboard": [
-                                          [{
-                                              "text": "InlineFeatures.",
-                                              "callback_data": "inline_plugs_1118095942"
-                                          }],
-                                          [{
-                                              "text": "OtherFeatures.",
-                                              "callback_data": "other_plugs_1118095942"
-                                          }]
-                                      ]
-                                  }
-
-                              }
-                          ])
-                      })
-
-                      function tgmsg(method, data) {
-                          var options = {
-                              'method': 'post',
-                              'contentType': 'application/json',
-                              'payload': JSON.stringify(data)
-                          };
-                          var responselk = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/' + method, options);
-                      }
-    */
-
                     }
                   }
                 >
-                  Тест отправки
-                </Button>
-                <span>{ eventStatus }</span>
+                  {/*Отправить расчёт в чат с ботом*/}
+                </Button>              
             </div>
           }
           subheaderNoWrap
           borderBottom
         />
         {/* --раздел-- */}
+        {/*
         <AppSection
           header={'Заголовок 3'}
           subheader={'Подзаголовок 3'}
           body={
             <div style={{width: '100%'}} className='flex justify-content-start'>
                 <Button
-                  className='btntest mt-2'
+                  className='btntest mt-2 flex-initial flex align-items-center justify-content-center'
+                  icon="pi pi-send"
+                  iconPos='right'
+                  disabled={!datefrom || !dateto}
                   onClick={
                     () => {
                       if (datefrom && dateto) {
@@ -1606,14 +1716,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
                     }
                   }
                 >
-                  Тест PDF
+                  Отправить расчёт в чат с ботом
                 </Button>
-                <span>{ eventStatus }</span>
             </div>
           }
           subheaderNoWrap
           
-        />
+        />*/}
       </Panel>
       { false &&
         <div id='dummy'>
@@ -1632,262 +1741,330 @@ export const Calc: FC<CalcProps> = ({type}) => {
 }
 
 
-// функция для создания файла PDF
-// модификация doShortTable()
-// вызывается по кнопке Тест PDF
+  /*
+    sendDocument
+    Используйте этот метод для отправки обычных файлов. В случае успеха отправленное сообщение будет возвращено. В настоящее время боты могут отправлять файлы любого типа размером до 50 МБ, но в будущем это ограничение может быть изменено.
 
-/////////
-///////// Оптимизировать код функции doPDF и sendPDF
-/////////
+    Параметр                        Тип                       Обязательный  Описание
+    --------------------------------------------------------------------------------
+    business_connection_id	        String	                  По выбору     Уникальный идентификатор бизнес-подключения, от имени которого будет отправлено сообщение
+    chat_id                         Integer или String	      Да	          Уникальный идентификатор целевого чата или имя пользователя целевого канала (в формате @channelusername)
+    message_thread_id	              Integer	                  По выбору     Уникальный идентификатор целевой ветки (темы) форума; только для супергрупп форума
+    document	                      InputFile или String      Да	          Файл для отправки. Передайте file_id в виде строки, чтобы отправить файл, который существует на серверах Telegram (рекомендуется), передайте URL-адрес HTTP в виде строки, чтобы Telegram получил файл из Интернета, или загрузите новый файл с помощью multipart/form-data. Подробнее об отправке файлов »
+    thumbnail	                      InputFile или String	    По выбору     Эскиз отправленного файла; можно игнорировать, если создание эскиза для файла поддерживается на стороне сервера. Эскиз должен быть в формате JPEG и иметь размер менее 200 КБ. Ширина и высота эскиза не должны превышать 320. Игнорируется, если файл не загружается с помощью multipart/form-data. Эскизы нельзя использовать повторно, их можно загружать только как новый файл, поэтому вы можете передать «attach://<имя_файла_приложения>», если эскиз был загружен с помощью multipart/form-data под <именем_файла_приложения>. Подробнее об отправке файлов »
+    caption	                        String	                  По выбору     Заголовок документа (также может использоваться при повторной отправке документов по идентификатору файла), 0-1024 символа после разбора сущностей
+    parse_mode	                    String	                  По выбору     Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+    caption_entities	              Array of MessageEntity	  По выбору     Сериализованный в формате JSON список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+    disable_content_type_detection	Boolean	                  По выбору     Отключает автоматическое определение типа контента на стороне сервера для файлов, загруженных с помощью multipart/form-data
+    disable_notification	          Boolean	                  По выбору     Отправляет сообщение без звука. Пользователи получат уведомление без звука.
+    protect_content	                Boolean	                  По выбору     Защищает содержимое отправленного сообщения от пересылки и сохранения
+    allow_paid_broadcast	          Boolean	                  По выбору     Установите значение True, чтобы разрешать отправку до 1000 сообщений в секунду, игнорируя ограничения на трансляцию, за плату в 0,1 звезды Telegram за сообщение. Соответствующие звезды будут списаны с баланса бота
+    message_effect_id	              String	                  По выбору     Уникальный идентификатор эффекта сообщения, который будет добавлен к сообщению; только для личных чатов
+    reply_parameters	              ReplyParameters	          По выбору     Описание сообщения, на которое нужно ответить
+    reply_markup	                  InlineKeyboardMarkup или 
+                                    ReplyKeyboardMarkup или 
+                                    ReplyKeyboardRemove или 
+                                    ForceReply	              По выбору     Дополнительные параметры интерфейса. Сериализованный в формате JSON объект для встроенной клавиатуры, пользовательской клавиатуры для ответов, инструкций по удалению клавиатуры для ответов или по принудительному ответу пользователя
+  ------------------------------------------------------------------------------
+ 
+  Отправка файлов
+  -------------
+  Есть три способа отправить файлы (фотографии, стикеры, аудио, мультимедиа и т. д.):
+
+  Если файл уже сохранён где-то на серверах Telegram, вам не нужно загружать его повторно: у каждого объекта файла есть поле file_id, просто передайте этот file_id в качестве параметра вместо загрузки. Ограничений на отправку файлов таким способом нет.
+  Укажите Telegram URL-адрес HTTP для отправки файла. Telegram загрузит и отправит файл. Максимальный размер фотографий — 5 МБ, других типов контента — 20 МБ.
+  Отправьте файл с помощью multipart/form-data обычным способом, как при загрузке файлов через браузер. Максимальный размер фотографий — 10 МБ, других файлов — 50 МБ.
+  Отправка по идентификатору файла
+
+  При повторной отправке по идентификатору файла невозможно изменить тип файла. То есть видео нельзя отправить как фотографию, фотографию нельзя отправить как документ и т. д.
+  Повторная отправка миниатюр невозможна.
+  При повторной отправке фотографии по идентификатору файла будут отправлены все её размеры.
+  Идентификатор файла уникален для каждого отдельного бота и не может быть передан от одного бота другому.
+  file_id однозначно идентифицирует файл, но у одного и того же файла могут быть разные допустимые file_id даже для одного и того же бота.
+  Отправка по URL
+
+  При отправке по URL целевой файл должен иметь правильный тип MIME (например, audio/mpeg для sendAudio и т. д.).
+  В sendDocument отправка по URL в настоящее время работает только для файлов .PDF и .ZIP.
+  Чтобы использовать функцию sendVoice, файл должен быть в формате audio/ogg и иметь размер не более 1 МБ. Голосовые заметки размером от 1 до 20 МБ будут отправляться в виде файлов.
+  Другие конфигурации могут работать, но мы не можем гарантировать это.
+  */
+
+
 /*
-function doPDF(
-  mainTable: MainTableRow[],
-  InitialData?: any,
-  setEventStatus?: (data: string) => void
-) {
+savePreparedInlineMessage
+------------------------------------
+Сохраняет сообщение, которое может быть отправлено пользователем мини-приложения. Возвращает объект PreparedInlineMessage.
 
-  const EventStatus = 'Отправка PDF боту...';
-  setEventStatus && setEventStatus(EventStatus);
-  const ID = InitialData || '';
+Параметр	              Тип	                Обязательный	    Описание
+--------------------------------------------------------------------------------------
+user_id	                Integer	            Да	              Уникальный идентификатор целевого пользователя, который может использовать подготовленное сообщение
+result	                InlineQueryResult	  Да 	              Объект в формате JSON, описывающий отправляемое сообщение
+allow_user_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с пользователями
+allow_bot_chats	        Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в личные чаты с ботами
+allow_group_chats	      Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые и супергрупповые чаты
+allow_channel_chats	    Boolean	            По выбору	        Передайте значение True, если сообщение можно отправить в групповые чаты
+
+PreparedInlineMessage
+------------------------------------
+Описывает встроенное сообщение, которое может быть отправлено пользователем мини-приложения.
+
+Поле	                  Тип	                                  Описание
+--------------------------------------------------------------------------------------
+id	                    String	                              Уникальный идентификатор подготовленного сообщения
+expiration_date	        Integer	                              Дата истечения срока действия подготовленного сообщения по времени Unix. Подготовленные сообщения с истекшим сроком действия больше нельзя использовать
+
+InlineQueryResult
+------------------------------------
+Этот объект представляет собой один результат встроенного запроса. В настоящее время клиенты Telegram поддерживают результаты следующих 20 типов:
+
+InlineQueryResultCachedAudio
+InlineQueryResultCachedDocument
+InlineQueryResultCachedGif
+InlineQueryResultCachedMpeg4Gif
+InlineQueryResultCachedPhoto
+InlineQueryResultCachedSticker
+InlineQueryResultCachedVideo
+InlineQueryResultCachedVoice
+InlineQueryResultArticle
+InlineQueryResultAudio
+InlineQueryResultContact
+InlineQueryResultGame
+InlineQueryResultDocument
+InlineQueryResultGif
+InlineQueryResultLocation
+InlineQueryResultMpeg4Gif
+InlineQueryResultPhoto
+InlineQueryResultVenue
+InlineQueryResultVideo
+InlineQueryResultVoice
+*/
+
+/*
+InlineQueryResultDocument
+------------------------------------
+Представляет собой ссылку на файл. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content, чтобы отправить сообщение с указанным содержимым вместо файла. В настоящее время с помощью этого метода можно отправлять только файлы .PDF и .ZIP.
+
+Поле	                  Тип	                                  Описание
+--------------------------------------------------------------------------------------
+type	                  String	                              Тип результата встроенного запроса, должен быть указан document
+id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
+title	                  String	                              Название для результата встроенного запроса
+caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
+parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+document_url	          String	                              Допустимый URL-адрес для файла
+mime_type	              String	                              MIME-тип содержимого файла: «application/pdf» или «application/zip»
+description	            String	                              По выбору. Краткое описание результата
+reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
+input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
+thumbnail_url	          String	                              По выбору. URL-адрес миниатюры (только в формате JPEG) для файла
+thumbnail_width	        Integer	                              По выбору. Ширина миниатюры
+thumbnail_height	      Integer	                              По выбору. Высота миниатюры
+*/
+
+/*
+const doc = {
+  type: 'document',                                           // тип результата встроенного запроса
+  id: 1,                                                      // уникальный идентификатор этого результата
+  title: 'Документ 1',                                        // название для результата встроенного запроса
+  caption: 'Подпись документа 1',                             // заголовок отправляемого документа
+  //parse_mode: 'HTML',                                       // режим для анализа сущностей в заголовке
+  //caption_entities: [],                                     // список специальных сущностей
+  document_url: URL.createObjectURL(blob),                    // URL-адрес для файла
+  mime_type: 'application/pdf',                               // MIME-тип содержимого файла
+  description: 'Описание документа 1',                        // краткое описание результата
+  //reply_markup: {},                                         // встроенная клавиатура
+  //input_message_content: {},                                // содержимое отправляемого сообщения
+  //thumbnail_url: '',                                        // URL-адрес миниатюры
+  //thumbnail_width: 0,                                       // ширина миниатюры
+  //thumbnail_height: 0                                       // высота миниатюры
+};
+*/
+
+/*
+InlineQueryResultCachedDocument
+------------------------------------
+Представляет собой ссылку на файл, хранящийся на серверах Telegram. По умолчанию этот файл будет отправлен пользователем с дополнительной подписью. В качестве альтернативы вы можете использовать input_message_content для отправки сообщения с указанным содержимым вместо файла.
+
+Поле	                  Тип	                                  Описание
+--------------------------------------------------------------------------------------
+type	                  String	                              Тип результата встроенного запроса, должен быть указан document
+id	                    String	                              Уникальный идентификатор этого результата, 1-64 байта
+title	                  String	                              Название для результата встроенного запроса
+document_file_id	      String	                              Действительный идентификатор для этого файла
+description	            String	                              По выбору. Краткое описание результата
+caption	                String	                              По выбору. Заголовок отправляемого документа, 0-1024 символа после разбора сущностей
+parse_mode	            String	                              По выбору. Режим для анализа сущностей в заголовке документа. Подробнее см. в параметрах форматирования.
+caption_entities	      Array of MessageEntity	              По выбору. Список специальных сущностей, которые появляются в заголовке и которые можно указать вместо parse_mode
+reply_markup	          InlineKeyboardMarkup	                По выбору. Встроенная клавиатура, прикрепленная к сообщению
+input_message_content	  InputMessageContent	                  По выбору. Содержимое отправляемого сообщения вместо файла
+*/
+
+
+
+
+
+/*
+*** Расчёт процентов по ст.395 ГК РФ
+период / задолженность / расчёт процентов(неустойки) / сумма процентов(неустойки)
+--------------------------------------------------------------------------------------------
+01.02.2025 - 10.02.2025    100000 +         0 -         0 =    100000 0.0575%  10    575.34
+11.02.2025 - 11.02.2025    100000 +         0 -      1000 =     99000 0.0575%   1     57.53
+12.02.2025 - 12.02.2025     99000 +      3000 -         0 =    102000 0.0575%   1     58.68
+13.02.2025 - 10.03.2025    102000 +         0 -         0 =    102000 0.0575%  26   1525.81
+11.03.2025 - 11.03.2025    102000 +         0 -      2000 =    100000 0.0575%   1     58.68
+12.03.2025 - 12.03.2025    100000 +      2000 -         0 =    102000 0.0575%   1     58.68
+13.03.2025 - 10.04.2025    102000 +         0 -         0 =    102000 0.0575%  29   1701.86
+11.04.2025 - 11.04.2025    102000 +         0 -      3000 =     99000 0.0575%   1     58.68
+12.04.2025 - 12.04.2025     99000 +      1000 -         0 =    100000 0.0575%   1     57.53
+13.04.2025 - 30.04.2025    100000 +         0 -         0 =    100000 0.0575%  18   1035.62
+--------------------------------------------------------------------------------------------
+*/
+
+
+  /*
+  const msg = {
+    type: 'article',
+    id: 1,
+    title: 'Заголовок 1',
+    description: 'Описание 1',
+    caption: 'Подпись 1',
+    input_message_content: {
+      'message_text': 'А это текст сообщения 1'
+    }
+  };
+  const doc = {
+    type: 'document',
+    id: 1,
+    title: 'Документ 1',
+    description: 'Описание документа 1',
+    caption: 'Подпись документа 1',
+    document_url: 'https://google.com',
+    mime_type: 'application/pdf'
+  }
   
-  let currentShortRow: ShortTableRow | null = null; // текущая строка
-
-  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
-  let lastDaysInYear = 365; // количество дней в году по умолчанию
-
-  let rows: ShortTableRow[] = [];
-
-  mainTable.map((row, index, array) => {
-    // количество дней в году для текущей даты
-    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
-    
-    // проверка на изменение ключевых параметров
-    const setNewShortRow = 
-          lastRow?.in !== row.in || 
-          lastRow?.out !== row.out || 
-          lastRow?.percent !== row.percent ||
-          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
-
-    if (setNewShortRow) {
-      currentShortRow = {
-        s: row.date,
-        e: row.date,
-        i: row.in,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: row.penalty  
-      } as ShortTableRow;
-      if (lastShortRow) {
-        rows.push(lastShortRow);
-      } else {
-        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
-      }
-    } else {
-      if (!currentShortRow) return;
-      const penalty = row.penalty === undefined ? 0 : row.penalty;
-      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
-      currentShortRow = {
-        s: currentShortRow.s,
-        e: row.date,
-        i: currentShortRow.i,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: sumPenalty  
-      }
-      if (array.length - 1 === index) {
-        rows.push(currentShortRow);
-      }
-    }
-
-    if (currentShortRow === null) currentShortRow = {
-      s: row.date,
-      e: row.date,
-      ...row
-    } as ShortTableRow;
-
-    lastShortRow = currentShortRow;
-    // после проверки текущий ряд сохраняем в переменную
-    lastRow = row;
-    lastDaysInYear = daysInYear;
-  });
-
-  let sum = 0;
-
-  // do inputs
-  const inputsArr: [string,string,string,string][] = [];
-  rows.forEach(row => {
-    const start = row.s.toLocaleDateString();
-    const end = row.e.toLocaleDateString();
-    
-    const oneDay = 1000 * 60 * 60 * 24;
-    // Вычисление разницы во времени между двумя датами
-    const diffInTime = row.e.getTime() - row.s.getTime();
-    // Вычисление количества дней между двумя датами
-    const diffInDays = Math.round(diffInTime / oneDay);
-
-    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
-
-    const sumin = row.i;
-    const inc = row.inc;
-    const dec = row.dec;
-    const sumout = row.o;
-    const percent = Number(row.pcnt); // процент в год
-    const penalty = Number(row.plty);
-
-    const pen = Number(penalty.toFixed(4));
-    sum = sum + pen;
-    
-    const inputRow: any = [];
-
-    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
-
-    inputRow.push(`${start} - ${end}`); // период
-    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
-    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
-    inputRow.push(`${pen}`); // проценты
-    inputsArr.push(inputRow);
-  });
-
-  const inputsTable: InputsCalcTable[] = [
-    {
-      "title": "Расчёт процентов (неустойки)",
-      "Calculation": inputsArr,
-      "sum": `Итого: ${sum.toFixed(2).toString()}`,
-      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
-    }
-  ];
-
-  // генерация PDF с обработкой результата через обратный вызов
-  doGeneratePdf(templateCalcTable, inputsTable, ID, sendDocumentBlob );
-}
-
-// Почти тоже самое что и doPDF, но с отправкой файла выбранному пользователю
-function sendPDF(
-  mainTable: MainTableRow[],
-  InitialData?: any,
-  setEventStatus?: (data: string) => void
-) {
-
-  const EventStatus = 'Отправка PDF выбранному пользователю...';
-  setEventStatus && setEventStatus(EventStatus);
-  const ID = InitialData || '';
+  console.log('test');
   
-  let currentShortRow: ShortTableRow | null = null; // текущая строка
-
-  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
-  let lastDaysInYear = 365; // количество дней в году по умолчанию
-
-  let rows: ShortTableRow[] = [];
-
-  mainTable.map((row, index, array) => {
-    // количество дней в году для текущей даты
-    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
-    
-    // проверка на изменение ключевых параметров
-    const setNewShortRow = 
-          lastRow?.in !== row.in || 
-          lastRow?.out !== row.out || 
-          lastRow?.percent !== row.percent ||
-          lastDaysInYear !== daysInYear; // проверка на изменение дней в году
-
-    if (setNewShortRow) {
-      currentShortRow = {
-        s: row.date,
-        e: row.date,
-        i: row.in,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: row.penalty  
-      } as ShortTableRow;
-      if (lastShortRow) {
-        rows.push(lastShortRow);
-      } else {
-        //console.log('%clastShortRow: %o', 'color: yellow', lastShortRow);
-      }
-    } else {
-      if (!currentShortRow) return;
-      const penalty = row.penalty === undefined ? 0 : row.penalty;
-      const sumPenalty = currentShortRow?.plty ? currentShortRow?.plty + penalty : 0 + penalty;
-      currentShortRow = {
-        s: currentShortRow.s,
-        e: row.date,
-        i: currentShortRow.i,
-        inc: row.inc,
-        dec: row.dec,
-        o: row.out,
-        pcnt: row.percent,
-        plty: sumPenalty  
-      }
-      if (array.length - 1 === index) {
-        rows.push(currentShortRow);
-      }
-    }
-
-    if (currentShortRow === null) currentShortRow = {
-      s: row.date,
-      e: row.date,
-      ...row
-    } as ShortTableRow;
-
-    lastShortRow = currentShortRow;
-    // после проверки текущий ряд сохраняем в переменную
-    lastRow = row;
-    lastDaysInYear = daysInYear;
-  });
-
-  let sum = 0;
-
-  // do inputs
-  const inputsArr: [string,string,string,string][] = [];
-  rows.forEach(row => {
-    const start = row.s.toLocaleDateString();
-    const end = row.e.toLocaleDateString();
-    
-    const oneDay = 1000 * 60 * 60 * 24;
-    // Вычисление разницы во времени между двумя датами
-    const diffInTime = row.e.getTime() - row.s.getTime();
-    // Вычисление количества дней между двумя датами
-    const diffInDays = Math.round(diffInTime / oneDay);
-
-    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
-
-    const sumin = row.i;
-    const inc = row.inc;
-    const dec = row.dec;
-    const sumout = row.o;
-    const percent = Number(row.pcnt); // процент в год
-    const penalty = Number(row.plty);
-
-    const pen = Number(penalty.toFixed(4));
-    sum = sum + pen;
-    
-    const inputRow: any = [];
-
-    const sumtocalc = sumin !== undefined && inc !== undefined && sumin + inc;
-
-    inputRow.push(`${start} - ${end}`); // период
-    inputRow.push(`${sumin?.toString()} + ${inc?.toString()} - ${dec?.toString()} = ${sumout?.toString()}`); // долга
-    inputRow.push(`${(diffInDays + 1).toString()} * ${percent}% / ${daysInYear} * ${sumtocalc.toString()}`); // расчёт
-    inputRow.push(`${pen}`); // проценты
-    inputsArr.push(inputRow);
-  });
-
-  const inputsTable: InputsCalcTable[] = [
-    {
-      "title": "Расчёт процентов (неустойки)",
-      "Calculation": inputsArr,
-      "sum": `Итого: ${sum.toFixed(2).toString()}`,
-      "comment": "* День уплаты денежных средств включается в период просрочки исполнения денежного обязательства.\n** Сумма процентов за период приводится до 4 знака после запятой.\n*** Общая сумма процентов приводится за 2 знака после запятой."
-    }
-  ];
+  //interface FormData {
+  //  yoo: typeof FormData.prototype.append;
+  //}
   
-  doGeneratePdf(templateCalcTable, inputsTable, ID, sendPreparedBlob );
-}*/
+  //FormData.prototype.yoo = FormData.prototype.append;
+
+  const FD = new FormData();
+  
+  //FormData.prototype.add = FormData.prototype.append;
+  //console.log('id: ', ID?.user?.id);
+  FD.append('user_id', ID?.user?.id.toString() || '');
+  FD.append('result', JSON.stringify(msg));
+  FD.append('allow_user_chats', 'true');
+  FD.append('allow_bot_chats', 'true');
+  FD.append('allow_group_chats', 'true');
+  FD.append('allow_channel_chats', 'true');
+  // web_app_send_prepared_message
+  botMethod(
+    'savePreparedInlineMessage',
+    FD
+  ).then((result: any) => {
+
+    window.addEventListener('message', ({ data }) => {
+      //const { eventType, eventData } = JSON.parse(data);
+      console.log(data);
+    });
+
+    console.log(result);
+    //console.log(result.payload?.result?.status);
+    const PIM: PreparedInlineMessage = result.payload?.result;
+    console.log(PIM.id);
+    //const D = new FormData();
+    //D.append('inline_message_id', PIM.id.toString());
+    
+    //console.log(`window: `, window);
+    //botMethod('SentWebAppMessage', D);
+    postEvent('web_app_send_prepared_message', {id: PIM.id.toString()});
+    on('prepared_message_sent', (data) => { console.log(data); setEventStatus(String(data)); });
+    on('prepared_message_failed', (data) => { console.log(data); setEventStatus(String(data)); });
+                
+  }).catch((error) => {
+    console.log(error);
+  });
+  */
+
+  /*
+  //your bot token placed here
+  const token = "";
+  tgmsg('answerInlineQuery', {
+
+      "inline_query_id": update['inline_query']['id'],
+      "results": JSON.stringify([
+          //inline result of an article with thumbnail photo
+          {
+              "type": "article",
+              "id": "1",
+              "title": "chek inline keybord ",
+              "description": "test ",
+              "caption": "caption",
+              "input_message_content": {
+                  "message_text": "you can share inline keyboard to other chat"
+              },
+
+              "thumb_url": "https://avatars2.githubusercontent.com/u/10547598?v=3&s=88"
+          },
+          //inline result of an article with inline keyboard
+          {
+              id: "nchfjdfgd",
+              title: 'title',
+              description: "description",
+              type: 'article',
+              input_message_content: {
+                  message_text: "inline is enabled input_message_content: {message_text: message_text}message_text"
+              },
+              reply_markup: {
+                  "inline_keyboard": [
+                      [{
+                          "text": "InlineFeatures.",
+                          "callback_data": "inline_plugs_1118095942"
+                      }],
+                      [{
+                          "text": "OtherFeatures.",
+                          "callback_data": "other_plugs_1118095942"
+                      }]
+                  ]
+              }
+          },
+
+          //inline result of a cached telegram document with inline keyboard
+          {
+              id: "nchgffjdfgd",
+              title: 'title',
+              description: "description",
+              //change this on with the value of file_id from telegram bot api 
+              document_file_id: "BQACAgQAAxkBAAIBX2CPrD3yFC0X1sI0HFTxgul0GdqhAALjDwACR4pxUKIV48XlktQNHwQ",
+              type: 'document',
+              caption: "caption ghh hhdd",
+              reply_markup: {
+                  "inline_keyboard": [
+                      [{
+                          "text": "InlineFeatures.",
+                          "callback_data": "inline_plugs_1118095942"
+                      }],
+                      [{
+                          "text": "OtherFeatures.",
+                          "callback_data": "other_plugs_1118095942"
+                      }]
+                  ]
+              }
+
+          }
+      ])
+  })
+
+  function tgmsg(method, data) {
+      var options = {
+          'method': 'post',
+          'contentType': 'application/json',
+          'payload': JSON.stringify(data)
+      };
+      var responselk = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/' + method, options);
+  }
+  */

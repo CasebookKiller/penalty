@@ -1,3 +1,5 @@
+import * as nonWorkingDays from './nonWorkingDays.json';
+
 console.log('Загружен модуль с функциями...')
 import { Template } from '@pdfme/common';
 import * as keyrates from './keyrates.json';
@@ -10,6 +12,8 @@ import * as keyrates from './keyrates.json';
 //miniApp.mountSync(); console.log('miniApp');
 
 import  { parse } from 'date-fns'; // https://date-fns.org/
+import { SetStateAction } from 'react';
+//import { date } from '@pdfme/schemas';
 
 export function dateFromString(dateString: string) {
   return parse(dateString, 'dd.MM.yyyy', new Date());
@@ -92,10 +96,8 @@ export function getCurrRates(cb: (result: any) => void) {
 */
 
 export async function getCurrencies(lastdate?: string) {
-  const date = lastdate ? new Date(lastdate) : new Date();
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
+  const d = lastdate ? lastdate.split('.') : new Date().toLocaleDateString().split('.');
+  const day = d[0], month = d[1], year = d[2];
   const rateRequestUrl = `https://www.cbr-xml-daily.ru/archive/${year}/${month}/${day}/daily_json.js`;
   //const rateRequestUrl = 'https://www.cbr-xml-daily.ru/daily_json.js';
   // https://www.cbr-xml-daily.ru/archive/2025/04/08/daily_json.js
@@ -195,6 +197,32 @@ export async function getCurrencies(lastdate?: string) {
     JPY: JPY
   };
 };
+
+export function updateCurrencyRates(
+  cbSetUSD: (value: SetStateAction<number>) => void, 
+  cbSetEUR: (value: SetStateAction<number>) => void
+) {
+  let date = new Date();
+  date.setDate(date.getDate()); console.log('date: ', date.toLocaleDateString());
+  let yesterday = new Date();
+  yesterday.setDate(date.getDate()-1); console.log('yesterday: ', yesterday.toLocaleDateString());
+  const yesterdayIsWorking = isWorkingDay(yesterday.getFullYear(),yesterday.getMonth()+1,yesterday.getDate());
+  console.log('%cisworking: %o','color: cyan', yesterdayIsWorking);
+  console.log('%cdate: %o','color: cyan',date);
+  lastWorkingDay(date.getFullYear(),date.getMonth() + 1,date.getDate());
+  getCurrencies(date.toLocaleDateString()).then((result)=>{
+    //console.log('%c result', 'color: red',result);
+    // устанавливаем курс доллара и евро
+    cbSetUSD(result.USD);
+    cbSetEUR(result.EUR);
+    //console.log('%c---USD: ', 'color: yellow;', result.USD);
+    //console.log('%c---EUR: ', 'color: yellow;', result.EUR);
+    
+  }).catch((error) => {
+    console.log('Ошибка: ', error);
+  });
+}
+
 
     
 export interface CalcProps {
@@ -425,3 +453,235 @@ export interface InputsCalcTable {
   sum: string;
   comment: string;
 };
+
+/**
+ * Рабочий день
+ * @param { number | string } year - Год
+ * @param { number | string } month - Месяц в обычном представление (1 - январь, 2 - февраль, и т.д.) 
+ * @param { number | string } day - День
+ * @returns 
+ */
+export function isWorkingDay(year: string|number, month: string|number, day: string|number) {
+  const monthtype = typeof month;
+  const daytype= typeof day;
+  const _year = nonWorkingDays.data.find(data=>data.year === Number(year));
+  const _month = _year?.months.find(data=>data.month === (monthtype === "string" ? String(Number(month)).padStart(2,"0") : String(month).padStart(2,"0")));
+  const _day = _month?.days.find(data=>data === (daytype === "string" ? day : String(day).padStart(2,"0")));
+  return _day === undefined ? true: false;
+}
+
+/**
+ * Поиск предыдущего рабочего дня
+ * @param {number | string} year 
+ * @param month 
+ * @param day 
+ * @returns 
+ */
+export function lastWorkingDay(year: string|number, month: string|number, day: string|number) {
+  const currentDate = new Date(Number(year),Number(month)-1,Number(day));
+  console.log(currentDate);
+  let findedDate = new Date();
+  let n = 0;
+  let isworking = false;
+  while (!isworking && n < 7) {
+    let date = new Date();
+    date.setDate(currentDate.getDate()-n);
+    date.setMonth(currentDate.getMonth());
+    date.setFullYear(currentDate.getFullYear());
+    console.log(date.toLocaleDateString());
+    console.log(date.getMonth()+1);
+    isworking = isWorkingDay(date.getFullYear(), date.getMonth()+1, date.getDate());
+    console.log(isworking);
+    if (isworking) findedDate = date;
+    n = n + 1;
+    console.log(n);
+  }
+  console.log(findedDate);
+  return findedDate;
+}
+
+//lastWorkingDay('2025','07','4');
+//lastWorkingDay('2025','07','3');
+//lastWorkingDay('2025','07','2');
+//lastWorkingDay('2025','07','1');
+lastWorkingDay('2025','06','28');
+
+//lastWorkingDay(2025,7,1);
+
+console.log(isWorkingDay(2025,6,28));
+//console.log(isWorkingDay(2025,7,1));
+//console.log(isWorkingDay(2025,6,30));
+//console.log(isWorkingDay(2025,6,29));
+
+export function hasDecimals(num: number): boolean { return num % 1 !== 0; }
+
+export const reservedchars = ';/?:@&=+$,';
+export const safechars = '-_.~';
+export const specialchars = "!*'()";
+export const notsafechars = '<>"{}|\^`';
+export const B64chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_';
+
+/**
+ * encode number to B64 string
+ * @param {number} num - число 
+ * @returns {string}
+ */
+export function NumToB64(num: number): string {
+  let integer = !hasDecimals(num);
+  let encoded = '';  
+  if (integer) {
+    while (num > 0) {  
+      const remainder = num % B64chars.length;  
+      encoded = B64chars[remainder] + encoded;  
+      num = Math.floor(num / B64chars.length);  
+    }  
+  return encoded || '0'; // Возвращает '0', если число равно 0
+  } else {
+    let whole = Math.floor(num);
+    let decimal = Math.floor((num - whole) * 100);
+    let arr = [];
+    while (whole > 0) {  
+      const remainder = whole % B64chars.length;  
+      encoded = B64chars[remainder] + encoded;  
+      whole = Math.floor(whole / B64chars.length);  
+    } 
+    arr.push(encoded); encoded = '';
+    while (decimal > 0) {
+      const remainder = decimal % B64chars.length;  
+      encoded = B64chars[remainder] + encoded;  
+      decimal = Math.floor(decimal / B64chars.length);  
+    }
+    arr.push(encoded);
+    return arr.length > 1 ? arr.join('.') : arr[0];
+  }
+}
+
+/**
+ * decode number from B64 string
+ * @param {string} encoded - число в формате B64  
+ * @returns 
+ */
+export function NumFromB64(encoded: string): number {  
+  let arr = encoded.split('.');
+  let decoded = 0;
+  
+  if (arr.length > 1) {
+    let whole = 0;
+    let decimal = 0;
+    for (let i = 0; i < arr[0].length; i++) {  
+      const char = arr[0][i];  
+      const index = B64chars.indexOf(char);  
+      whole = whole * B64chars.length + index;  
+    }
+    for (let i = 0; i < arr[1].length; i++) {  
+      const char = arr[1][i];  
+      const index = B64chars.indexOf(char);  
+      decimal = decimal * B64chars.length + index;  
+    }
+    decoded = whole + decimal / 100;
+  } else {
+    for (let i = 0; i < encoded.length; i++) {  
+      const char = encoded[i];  
+      const index = B64chars.indexOf(char);  
+      decoded = decoded * B64chars.length + index;  
+    }  
+  }
+    
+  return decoded;  
+}
+
+
+export function shortDate(date: Date): string {
+  const dd = (date.getDate().toString()).padStart(2, '0');
+  const mm = (date.getMonth()+1).toString().padStart(2, '0');
+  const yy = Number(date.getFullYear())-2000;
+  return ''+dd+'.'+mm+'.'+yy;
+}
+
+export function getDateFromNum(num: number): Date {
+  const date = num.toString().padStart(6, '0').split(/(?=(?:..)*$)/);  
+  date[2] = (Number(date[2]) + 2000).toString();
+  const result = new Date(date[2]+'-'+date[1]+'-'+date[0]+'T00:00:00');
+  return new Date(result);
+}
+
+export function fromCalcB64Data(data: [
+        string,
+        string,
+        string[],
+        string[]
+]): [
+        [number | undefined, number, number, number, number],
+        [number, number],
+        [Array<[number, number]>, Array<[number, number]>]
+  ] {
+
+    const arr = data[0].split('.');
+    const type = NumFromB64(arr[0]);
+    const debt = NumFromB64(arr[1]);
+    const currency = NumFromB64(arr[2]);
+    const rate = NumFromB64(arr[3]);
+    const periodtype = NumFromB64(arr[4]);
+  
+    const decrease = data[2].map((item) => {
+        const arr = item.split('.');
+        const result: [number, number] = [ NumFromB64(arr[0]), NumFromB64(arr[1]) ];
+        return result;
+      }
+    );
+    
+    const increase = data[3].map((item) => {
+      const arr = item.split('.');
+        const result: [number, number] = [ NumFromB64(arr[0]), NumFromB64(arr[1]) ];
+        return result;
+      }
+    );
+
+    const arr2: string[] = data[1].split('.');
+    console.log('arr2: ', arr2);
+    console.log(NumFromB64(arr2[0]).toString().padStart(6, '0'));
+    console.log(NumFromB64(arr2[1]).toString().padStart(6, '0'));
+
+    console.log(getDateFromNum(NumFromB64(arr2[0])));
+
+    const strDateFrom = NumFromB64(arr2[0]).toString().padStart(6, '0').split(/(?=(?:..)*$)/);  
+    const strDateTo = NumFromB64(arr2[1]).toString().padStart(6, '0').split(/(?=(?:..)*$)/);
+
+    strDateFrom[2] = (Number(strDateFrom[2]) + 2000).toString();
+    strDateTo[2] = (Number(strDateTo[2]) + 2000).toString();
+
+    console.log(strDateFrom);
+    console.log(strDateTo);
+    const dateFrom = getDateFromNum(NumFromB64(arr2[0]));
+    const dateTo = getDateFromNum(NumFromB64(arr2[1]));
+    console.log('dateFrom: ', dateFrom);
+    console.log('dateTo: ', dateTo);
+
+    const period: [number, number] = [NumFromB64(arr2[0]), NumFromB64(arr2[1])];
+
+  return [
+    [type, debt, currency, rate, periodtype],
+    period,
+    [decrease, increase]
+  ]
+}
+
+export function checkUTF8(text:string) {
+    var utf8Text = text;
+    try {
+        // Try to convert to utf-8
+        utf8Text = decodeURIComponent(escape(text));
+        // If the conversion succeeds, text is not utf-8
+    }catch(e) {
+        // console.log(e.message); // URI malformed
+        // This exception means text is utf-8
+    }
+    return utf8Text; // returned text is always utf-8
+}
+
+export function sharelink(id: string | undefined, crushedCalcData: string) {
+  const applink = 'https://t.me/' + import.meta.env.VITE_BOT_NAME + '/' + import.meta.env.VITE_APP_NAME + '?startapp=';
+  const bro = id ? 'bro' + id : ''
+  const url = applink + 'clc' + crushedCalcData + bro;
+  return url;
+}
