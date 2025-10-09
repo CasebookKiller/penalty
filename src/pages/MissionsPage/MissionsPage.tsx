@@ -1,3 +1,5 @@
+// ЗАМЕНИТЬ ANTD-MOBLE НА PRIME-REACT
+
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 import { openTelegramLink, shareURL, retrieveLaunchParams } from '@telegram-apps/sdk-react';

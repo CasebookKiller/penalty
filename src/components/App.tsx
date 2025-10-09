@@ -27,6 +27,8 @@ import {
 import { Route as AppRoute,routes } from '@/navigation/routes.tsx';
 import { PenaltyPage } from '@/pages/PenaltyPage/PenaltyPage';
 import { GK395Page } from '@/pages/GK395Page/GK395Page';
+import { StartUrlPage } from '@/pages/StartUrlPage/StartUrlPage';
+import { QRUrlPage } from '@/pages/QRUrlPage/QRUrlPage';
 
 function BackButtonManipulator() {
   const location = useLocation();
@@ -139,6 +141,11 @@ export const App: FC = () => {
   const lp = retrieveLaunchParams();
   console.log('lp', lp);
 
+  const LP = retrieveLaunchParams();
+  const tgWebAppData = LP?.tgWebAppData;
+  const initData = tgWebAppData;
+  const SP = initData?.start_param
+  
   //startTransition(() => {
   //  console.log('%cminiApp: %o', `color: cyan`, miniApp);
   //});
@@ -155,7 +162,11 @@ export const App: FC = () => {
   const penalty: AppRoute = { path: '/penalty', element: <PenaltyPage/>, title: 'Расчёт неустойки' };
   const gk395: AppRoute = { path: '/gk395', element: <GK395Page/>, title: 'Расчёт процентов по ст.395 ГК РФ' };
   
-  routes.push(penalty, gk395);
+  const starturl: AppRoute = { path: '/starturl', element: <StartUrlPage startParam= {SP}/>, title: 'Расчёт по ссылке' };
+  const qrurl: AppRoute = { path: '/qrurl', element: <QRUrlPage/>, title: 'Расчёт по ссылке' };
+  
+
+  routes.push(penalty, gk395, starturl, qrurl);
 
 
   return (

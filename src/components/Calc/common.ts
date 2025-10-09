@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 import * as nonWorkingDays from './nonWorkingDays.json';
 
 console.log('Загружен модуль с функциями...')
@@ -11,9 +13,43 @@ import * as keyrates from './keyrates.json';
 //themeParams.mountSync(); console.log('themeParams');
 //miniApp.mountSync(); console.log('miniApp');
 
-import  { parse } from 'date-fns'; // https://date-fns.org/
+import { parse } from 'date-fns'; // https://date-fns.org/
 import { SetStateAction } from 'react';
 //import { date } from '@pdfme/schemas';
+
+import * as jsoncrush from 'jsoncrush';
+
+export const colors = {
+  text: import.meta.env.VITE_TXT_COLOR,
+  text_red: import.meta.env.VITE_TXT_COLOR_RED || '',
+  accent: import.meta.env.VITE_ACCENT_TEXT_COLOR || '',
+  background: import.meta.env.VITE_BACKGROUND_COLOR || '',
+  hint: import.meta.env.VITE_HINT_COLOR || '',
+  
+}
+
+export const currencies = [
+  { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
+  { name: '$', value: 2, text: 'Доллар США', eng: 'USD', rus: 'долл.' },
+  { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
+];
+
+// Интерфейс параметров для функции обратного вызова для обработки blob PDF
+export interface IParamsDoWithPDF {
+  sendAdmin?: boolean;            // Признак отправки админу
+  cb?: (result: any) => void;     // Обработка результата обратного вызова
+  caption?: string;               // Заголовок
+  type?: number;                  // Тип расчета
+}
+
+// Интерфейс функции обратного вызова для обработки blob PDF
+export interface IDoWithPDF {
+  (
+    blob: Blob,                       // Blob PDF
+    InitialData: any,                 // Данные инициализации приложения
+    params?: IParamsDoWithPDF         // Параметры
+  ) : void 
+}
 
 export function dateFromString(dateString: string) {
   return parse(dateString, 'dd.MM.yyyy', new Date());
@@ -226,8 +262,24 @@ export function updateCurrencyRates(
 
     
 export interface CalcProps {
+  header?: ReactNode;
+  footer?: ReactNode;
   type?: number; // 0 - 395, 1 - penalty
+  calcdata?: CalcData;
 }
+
+/*
+export interface CalcProps {
+  header?: ReactNode;
+  footer?: ReactNode;
+  sum?: ReactNode;
+  posh?: ReactNode;
+  setSum?: React.Dispatch<React.SetStateAction<string>>;
+  setPosh?: React.Dispatch<React.SetStateAction<string>>;
+  courtType?: string;
+  code?: Code;
+}
+*/
 
 export interface DebtRow {
   id: number;
@@ -513,6 +565,7 @@ console.log(isWorkingDay(2025,6,28));
 //console.log(isWorkingDay(2025,6,30));
 //console.log(isWorkingDay(2025,6,29));
 
+
 export function hasDecimals(num: number): boolean { return num % 1 !== 0; }
 
 export const reservedchars = ';/?:@&=+$,';
@@ -520,6 +573,63 @@ export const safechars = '-_.~';
 export const specialchars = "!*'()";
 export const notsafechars = '<>"{}|\^`';
 export const B64chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_';
+
+export type CalcData = [
+  [number | undefined, number, number, number, number],
+  [number, number],
+  [Array<[number, number]>, Array<[number, number]>]
+];
+
+export function getCalcData(SP: string): CalcData | undefined {
+  //let calcB64Data: string;
+  let calcdata: CalcData = [
+    [0, 0, 0, 0, 0],
+    [0, 0],
+    [[[0, 0]], [[0, 0]]]
+  ];
+  if (SP !== '') {
+    console.log('%cПараметры запуска: %o', `color: ${colors.text}`, SP);
+
+    const unOrderedParams: Param[] = [
+      { name: 'clc', index: 0, value: '' },
+      { name: 'bro', index: 0, value: '' }
+    ];
+
+    let orderedParams: Param[] = [];
+    let params: Param[] = [];
+    
+    const arr: string[] = SP?.split(/clc|bro/) ?? [];
+    
+    if (arr.length < 2) return;  
+
+    unOrderedParams.forEach((item) => {
+      if (SP?.includes(item.name)) {
+        item.index = SP.indexOf(item.name);
+      }
+    });
+
+    orderedParams = unOrderedParams.sort( compareProps );
+    orderedParams.forEach((item) => {
+      if (item.index !== -1) params.push(item);
+    })
+    params.forEach((item) => {
+      item.value = arr[params.findIndex(x => x.name === item.name)+1];  
+    });
+
+    console.log('%cOrdered Params: %o', `color: ${colors.text}`, orderedParams);
+    orderedParams.forEach((item) => {
+      if (item.name === 'clc') {
+        console.log('%cclc: %o', `color: ${colors.text}`, item.value);
+        calcdata = link2CalcData(item.value);
+        //console.log('%cclc: %o', `color: ${colors.text}`, calcdata);
+      }
+    })
+
+  } else {
+    console.log('%cБез параметров запуска!', `color: ${colors.text}`);
+  }
+  return calcdata;  
+}
 
 /**
  * encode number to B64 string
@@ -610,11 +720,7 @@ export function fromCalcB64Data(data: [
         string,
         string[],
         string[]
-]): [
-        [number | undefined, number, number, number, number],
-        [number, number],
-        [Array<[number, number]>, Array<[number, number]>]
-  ] {
+]): CalcData {
 
     const arr = data[0].split('.');
     const type = NumFromB64(arr[0]);
@@ -684,4 +790,513 @@ export function sharelink(id: string | undefined, crushedCalcData: string) {
   const bro = id ? 'bro' + id : ''
   const url = applink + 'clc' + crushedCalcData + bro;
   return url;
+}
+
+
+  /*
+  function doCalcData(): [
+        [number | undefined, number, number, number, number],
+        [number, number],
+        [Array<[number, number]>, Array<[number, number]>]
+  ] {
+    const decrease = DebtDecrease.map((item) => {
+        const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
+        return result;
+      }
+    );
+    const increase = DebtIncrease.map((item) => {
+      const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
+        return result;
+      }
+    );
+
+    const from = datefrom !== undefined ? Number(datefrom.toLocaleDateString().replace('.','').replace('.','')) : 0;
+    const to = dateto !== undefined ? Number(dateto.toLocaleDateString().replace('.','').replace('.','')) : 0;
+
+    return  [
+              [type, debt, currency, rate, periodtype],
+              [from, to],
+              [decrease, increase]
+            ];
+  }
+  */
+
+
+export function doCalcB64Data(
+  datefrom: Date | undefined,
+  dateto: Date | undefined,
+  type: number | undefined,
+  debt: number,
+  currency: number,
+  rate: number,
+  periodtype: number,
+  DebtDecrease: DebtRow[],
+  DebtIncrease: DebtRow[]
+): [
+      string,
+      string,
+      string[],
+      string[]
+  ] {
+    // использовать вместо вложенного массива строку разделенными точками
+    const decrease = DebtDecrease.map((item) => {
+        const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
+        return result;
+      }
+    );
+    const increase = DebtIncrease.map((item) => {
+      const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
+        return result;
+      }
+    );
+
+    const from = datefrom !== undefined ? NumToB64(Number(shortDate(datefrom).replace('.','').replace('.',''))) : '0';
+    const to = dateto !== undefined ? NumToB64(Number(shortDate(dateto).replace('.','').replace('.',''))) : '0';
+
+    const base = (type ? NumToB64(type) : '') + '.' +
+                  NumToB64(debt) + '.' +
+                  NumToB64(currency) + '.' +
+                  NumToB64(rate) + '.' +
+                  NumToB64(periodtype);
+    const period = (from + '.' + to);
+
+    return  [
+              // вместо массива строка, разделенная точками
+              base,
+              period,
+              decrease,
+              increase
+            ];
+}
+
+// Сжатие параметров расчёта для url
+/*
+function crushedCalcData() {
+  const calcData = doCalcData();
+  const calcB64Data = doCalcB64Data();
+  const crushed = jsoncrush.default.crush(JSON.stringify(calcData)).replace(/\u0001/g, '%01');
+  setCrushedData(crushed);
+  const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
+  return crushed;
+}
+*/
+
+export function crushedCalcB64Data(
+  datefrom: Date | undefined,
+  dateto: Date | undefined,
+  type: number | undefined,
+  debt: number,
+  currency: number,
+  rate: number,
+  periodtype: number,
+  debtdecrease: DebtRow[],
+  debtincrease: DebtRow[],
+  setCrushedData: React.Dispatch<React.SetStateAction<string>>
+) {
+  const calcB64Data = doCalcB64Data(datefrom, dateto, type, debt, currency, rate, periodtype, debtdecrease, debtincrease);
+  const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
+  setCrushedData(crushedB64);
+  return crushedB64;
+}
+
+// Получение параметров расчёта из url
+export function uncrushedCalcData(crushed?: string, crushedData?: string) {
+  const uncrushed = crushed !== undefined ? JSON.parse(jsoncrush.default.uncrush(crushed.replace(/%01/g, '\u0001'))) : crushedData;
+  return uncrushed;
+}
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
+export type Param = {
+  name: string,
+  index: number,
+  value: string
+}
+
+/*export const calcPosh = (
+    value: string,
+    courtType: string,
+    benefitsSwitch?: boolean,
+    discount30Switch?: boolean,
+    discount50Switch?: boolean
+  ) => {
+  let _sum;
+  if (typeof(value) === 'string') {
+    _sum = Number(value.replace(',','.'));
+  } else {
+    _sum = Number(value);
+  }
+  let gospSou = 0;
+  let gospArb = 0;
+  let s = 0; // step
+  let b = 0; // base
+  let e = 0; // exceed
+  let p = 0; // percent
+  let f = 0; // fix
+  let withBenefits = 0; 
+  let withDiscount30 = 0;
+  let withDiscount50 = 0;
+
+  if (courtType === 'obsh' || courtType === '') {
+    if (_sum > 0 && _sum <= 100000) {
+      f = 4000;
+      gospSou = f; s = 1}
+    if (_sum > 100000 && _sum <= 300000) {
+      b = 100000; e = _sum - b; f = 4000; p = 3;
+      gospSou = (e) / 100 * p + f; s = 2;
+    }
+    if (_sum > 300000 && _sum <= 500000) {
+      b = 300000; e = _sum - b; f = 10000; p = 2.5;
+      gospSou = (e) / 100 * p + f; s = 3;
+    }
+    if (_sum > 500000 && _sum <= 1000000) {
+      b = 500000; e = _sum - b; f = 15000; p = 2;
+      gospSou = (e) / 100 * p + f; s = 4;
+    }
+    if (_sum > 1000000 && _sum <= 3000000) {
+      b = 1000000; e = _sum - b; f = 25000; p = 1;
+      gospSou = (e) / 100 * p + f; s = 5;
+    }
+    if (_sum > 3000000 && _sum <= 8000000) {
+      b = 3000000; e = _sum - b; f = 45000; p = 0.7;
+      gospSou = (e) / 100 * p + f; s = 6;
+    }
+    if (_sum > 8000000 && _sum <= 24000000) {
+      b = 8000000; e = _sum - b; f = 80000; p = 0.35;
+      gospSou = (e) / 100 * p + f; s = 7;
+    }
+    if (_sum > 24000000 && _sum <= 50000000) {
+      b = 24000000; e = _sum - b; f = 136000; p = 0.3;
+      gospSou = (e) / 100 * p + f; s = 8;
+    }
+    if (_sum > 50000000 && _sum <= 100000000) {
+      b = 50000000; e = _sum - b; f = 214000; p = 0.2;
+      gospSou = (e) / 100 * p + f; s = 9;
+    }
+    if (_sum > 100000000) {
+      b = 100000000; e = _sum - b; f = 314000; p = 0.15;
+      gospSou = (e) / 100 * p + f; s = 10;
+    }
+    if (gospSou > 900000) gospSou = 900000;
+
+    let benefitsSum: number = 25000;
+    let benefits: number = gospSou - benefitsSum;
+    let discount30: number = gospSou * 0.3; 
+
+    if (benefitsSwitch && benefits > 0) { gospSou = benefits; } else if (benefitsSwitch) { gospSou = 0; }
+    if (discount30Switch) gospSou -= discount30;
+
+    withBenefits = (benefits) > 0 ? (benefits) : 0;
+    withDiscount30 = gospSou - discount30;
+    return {
+      step: s,
+      gosp: gospSou.toFixed(0),
+      base: b.toFixed(2),
+      exceed: e.toFixed(2),
+      percent: p.toFixed(2),
+      fix: f.toFixed(2),
+      discount30: discount30.toFixed(2),
+      discount50: 0,
+      benefits: benefitsSum,
+      withBenefits: withBenefits.toFixed(2),
+      withDiscount30: withDiscount30.toFixed(2),
+      withDiscount50: gospSou.toFixed(2),
+    }
+  } else {
+    if (_sum > 0 && _sum <= 100000) {
+      f = 10000;
+      gospArb = f; s = 1}
+    if (_sum > 100000 && _sum <= 1000000) {
+      b = 100000; e = _sum - b; f = 10000; p = 5;
+      gospArb = (e) / 100 * p + f; s = 2;
+    }
+    if (_sum > 1000000 && _sum <= 10000000) {
+      b = 1000000; e = _sum - b; f = 55000; p = 3;
+      gospArb = (e) / 100 * p + f; s = 3;
+    }
+    if (_sum > 10000000 && _sum <= 50000000) {
+      b = 10000000; e = _sum - b; f = 325000; p = 1;
+      gospArb = (_sum - 10000000) / 100 * p + f; s = 4;
+    }
+    if (_sum > 50000000) {
+      b = 50000000; e = _sum - b; f = 725000; p = 0.5;
+      gospArb = (e) / 100 * p + f; s = 5;
+    }
+    if (gospArb > 10000000) gospArb = 10000000;
+
+    let benefitsSum = 55000;
+    let benefits = gospArb - benefitsSum;
+    let discount30 = gospArb * 0.3; 
+    let discount50 = gospArb * 0.5;
+
+    if (benefitsSwitch && benefits > 0) { gospArb = benefits; } else if (benefitsSwitch) { gospArb = 0; }
+    if (discount30Switch) gospArb -= discount30;
+    if (discount50Switch) gospArb -= discount50;
+
+    withBenefits = (benefits) > 0 ? (benefits) : 0;
+    withDiscount30 = gospArb - discount30;
+    withDiscount50 = gospArb - discount50;
+
+    return {
+      step: s,
+      gosp: gospArb.toFixed(0),
+      base: b.toFixed(2),
+      exceed: e.toFixed(2),
+      percent: p.toFixed(2),
+      fix: f.toFixed(2),
+      discount30: discount30.toFixed(2),
+      discount50: discount50.toFixed(2),
+      benefits: benefitsSum,
+      withBenefits: withBenefits.toFixed(2),
+      withDiscount30: withDiscount30.toFixed(2),
+      withDiscount50: withDiscount50.toFixed(2),
+    }
+  }
+}*/
+
+export function human(dosum: any) { // разрядность
+  // исправить
+  let sum = ''+dosum;
+  sum = sum.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ') // разрядность
+  if (sum.indexOf('.')!==-1) {						   // к десяткам копеек добавляем ноль
+    let b=sum.substring(sum.indexOf('.'),sum.length)
+    if (b.length===2) sum+="0"
+  }
+  if (sum.indexOf(',')!==-1) {						   // к десяткам копеек добавляем ноль
+    let b=sum.substring(sum.indexOf(','),sum.length)
+    if (b.length===2) sum+='0';
+  }
+  sum = sum.replace(/^00\./,'0.'); // меняем 00. на 0,
+  sum = sum.replace(/^00,/,'0.');
+  sum = sum.replace(/\./g,','); // меняем тчк на зпт
+  return sum;
+}
+
+export function prepareHash(value: string) {
+  if (value.indexOf('##')!=-1) value = value.substring(0,value.indexOf('##'))
+  if (value.indexOf('%23%23')!=-1) value = value.substring(0,value.indexOf('%23%23'))
+  value = value.replace(/%2C/g,',').replace(/&amp;/g,'&').replace(/%3B/g,";")
+  if (value.indexOf('&&')!=-1) value = value.substring(0,value.indexOf('&&'))
+  if (value.indexOf('h')!=-1) value = value.substring(0,value.indexOf('h'))
+  return value.replace(/%20/g,"");
+}
+
+export function cutlink(a: string, locationhash: string) {
+  let str = locationhash;
+  let a1 = str.substring(str.indexOf(a) + a.length);
+  if (a1.indexOf("a") !== -1) a1 = a1.substring(0, a1.indexOf("a"));
+  if (a1.indexOf("g") !== -1) a1 = a1.substring(0, a1.indexOf("g"));
+  a1 = a1.replace(/[ntjrfh<>]/gi, '');
+  a1 = a1.replace(/u/gi, '+').replace(/i/gi, '/').replace(/m/gi, '*').replace(/o/gi, '(').replace(/e/gi, ')');
+  a1 = a1.replace(/w/gi, '00').replace(/k/gi, '000').replace(/c/gi, '0000').replace(/p/gi, '00000').replace(/b/gi, '000000').replace(/s/gi, '0000000').replace(/v/gi, '00000000').replace(/d/gi, '000000000');
+  return a1;
+}
+
+export type Code = {
+  benefitsSwitch: boolean;
+  discount30Switch: boolean;
+  discount50Switch: boolean;
+  sou: string;
+  arb: string;
+}
+
+export const link2code: (hash: string) => Code = (hash: string) => { 
+  let benefitsSwitch = false;
+  //let benefitsSwitch2 = false;
+  let discount30Switch = false;
+  //let discount30Switch2 = false;
+  let discount50Switch = false;
+  let sou = ''; let arb = ''; //let oraz = ''; let yrtb = '';
+
+  if ( hash.indexOf('n') != -1 ) { benefitsSwitch = true; }
+  else if ( hash.indexOf('t') != -1 ) { discount30Switch = true; }
+
+  if ( hash.indexOf('g') != -1 ) {
+    sou = human(cutlink('g', hash));
+  }
+
+  if ( hash.indexOf('j') != -1 ) { benefitsSwitch = true; }
+  else if ( hash.indexOf('r') != -1 ) { discount30Switch = true; }
+  else if ( hash.indexOf('f') != -1 ) { discount50Switch = true; }
+
+  if ( hash.indexOf('a') != -1 ) {
+    arb = human(cutlink('a', hash));
+    //oraz = hash.substring(1, hash.length)+'h'+ (( location.hash.indexOf('hf') != -1 ) ? 'f' : '')
+    //yrtb = oraz;
+  }
+
+  return {
+    benefitsSwitch,
+    //benefitsSwitch2: benefitsSwitch2,
+    discount30Switch,
+    //discount30Switch2: discount30Switch2,
+    discount50Switch,
+    sou,
+    arb,
+    //oraz: oraz,
+    //yrtb: yrtb
+  } as Code;
+}
+
+export const link2CalcData: (hash: string) => CalcData = (hash: string) => { 
+  const getdebug = false;
+  getdebug && console.log('hash: ', hash);
+  let calcdata: CalcData = [
+    [0,0,0,0,0],  // 0
+    [0,0],        // 1
+    [             // 2
+      [[0,0]],    // 2, 0
+      [[0,0]]     // 2, 1
+    ]
+  ];
+  
+  calcdata = fromCalcB64Data(uncrushedCalcData(hash));
+
+  getdebug && console.log('calcdata: ', calcdata);
+  
+  const type = calcdata[0][0];
+  const debt = calcdata[0][1];
+  const currency = calcdata[0][2];
+  const rate = calcdata[0][3];
+  const periodtype = calcdata[0][4];
+  const period: [number, number] = calcdata[1];
+  const decrease: Array<[number, number]> = calcdata[2][0];
+  const increase: Array<[number, number]> = calcdata[2][1];
+
+  getdebug && console.log('type: ', type);
+  getdebug && console.log('debt: ', debt);
+  getdebug && console.log('currency: ', currencies[currency-1]);
+  getdebug && console.log(`rate: ${rate}%`);
+  getdebug && console.log(`periodtype: ${periodtype === 1 ? 'День': periodtype === 2 ? 'Год': ''}`);
+  getdebug && console.log(`period с ${getDateFromNum(period[0]).toLocaleDateString()} по ${getDateFromNum(period[1]).toLocaleDateString()}`);
+  getdebug && console.log('decrease');
+  getdebug && decrease.map((item) => {
+    console.log(`${getDateFromNum(item[0]).toLocaleDateString()}: ${item[1]}`);
+  })
+  getdebug && console.log('increase');
+  getdebug && increase.map((item) => {
+    console.log(`${getDateFromNum(item[0]).toLocaleDateString()}: ${item[1]}`);
+  })
+
+  return calcdata;
+}
+
+export function compareProps( a: Param, b: Param ) {
+  if ( a.index < b.index ) {
+    return -1;
+  }
+  if ( a.index > b.index ) {
+    return 1;
+  }
+  return 0;
+}
+
+export function getCode(SP: string) {
+  let code: Code = {
+    benefitsSwitch: false,
+    discount30Switch: false,
+    discount50Switch: false,
+    sou: '',
+    arb: ''
+  };
+
+  if (SP !== '') {
+    console.log('%cПараметры запуска: %o', `color: ${colors.text}`, SP);
+
+    const unOrderedParams: Param[] = [
+      { name: 'clc', index: 0, value: '' },
+      { name: 'bro', index: 0, value: '' }
+    ];
+
+    let orderedParams: Param[] = [];
+    let params: Param[] = [];
+    
+    const arr: string[] = SP?.split(/clc|bro/) ?? [];
+    
+    if (arr.length < 2) return;  
+
+    unOrderedParams.forEach((item) => {
+      if (SP?.includes(item.name)) {
+        item.index = SP.indexOf(item.name);
+      }
+    });
+
+    orderedParams = unOrderedParams.sort( compareProps );
+    orderedParams.forEach((item) => {
+      if (item.index !== -1) params.push(item);
+    })
+    params.forEach((item) => {
+      item.value = arr[params.findIndex(x => x.name === item.name)+1];  
+    });
+
+    console.log('%cOrdered Params: %o', `color: ${colors.text}`, orderedParams);
+    orderedParams.forEach((item) => {
+      if (item.name === 'clc') {
+        code = link2code(prepareHash(item.value));
+        console.log('%cclc: %o', `color: ${colors.text}`, code);
+      }
+      if (item.name === 'bro') {
+        code = link2code(prepareHash(item.value));
+        console.log('%cbro: %o', `color: ${colors.text}`, code);
+      }
+    })
+
+  } else {
+    console.log('%cБез параметров запуска!', `color: ${colors.text}`);
+  }
+  return code;
+}
+
+
+export function getOrderedParams(SP: string, arr: string[]) {
+  console.log('%cSP: %o', `color: white; background-color: blue`, SP);
+  console.log('%carr: %o', `color: white; background-color: blue`, arr);
+  let orderedParams: Param[] = [];
+  let params: Param[] = [];
+
+  const unOrderedParams: Param[] = [
+    { name: 'clc', index: -1, value: '' },
+    { name: 'bro', index: -1, value: '' }
+  ];
+      
+  if (arr.length < 2 && arr.length !== 0) return;  
+  if (arr.length !== 0) {
+    unOrderedParams.forEach((item) => {
+      console.log('%citem: %o', `color: ${colors.text}`, item);
+      if (SP?.includes(item.name)) {
+        const index = SP.indexOf(item.name);
+        
+        if (item.name === 'bro') {
+          item.index = index;
+          const bro = NumFromB64(item.value).toString();
+          item.value = bro;
+        }
+
+        if (item.name === 'clc') {
+          item.index = index;
+        }
+        console.log('%citem.name: %o', `color: ${colors.text}`, item.name);
+        console.log('%citem.index: %o', `color: ${colors.text}`, item.index);
+      }
+    });
+    console.log('%cunOrderedParams: %o', `color: ${colors.text}`, unOrderedParams);
+    orderedParams = unOrderedParams.sort( compareProps );
+    
+    orderedParams.forEach((item) => {
+      if (item.index !== -1) params.push(item);
+    })
+    params.forEach((item) => {
+      console.log('%citem: %o', `color: ${colors.text}`, item);
+      console.log('%carr: %o', `color: ${colors.text}`, arr);
+      item.value = arr[params.findIndex(x => x.name === item.name)+1];  
+    });
+
+    console.log('%cParams: %o', `color: ${colors.text}`, params);
+  }
+
+return (params);
 }

@@ -8,7 +8,7 @@ export const PenaltyPage: FC = () => {
   return (
     <div className="PenaltyPage">
       <Calc 
-        type = {1} 
+        type = {1}
       />
     </div>
   );

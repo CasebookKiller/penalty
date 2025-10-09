@@ -2,34 +2,9 @@
 //https://stackoverflow.com/questions/51202460/inlinequeryresultarticle-of-answerinlinequery-in-telegram-bot-api-with-google-ap
 
 import * as RU from '../../locale/ru.json';
-import * as jsoncrush from 'jsoncrush';
+import * as common from './common';
 
-import { 
-  isWorkingDay,
-  updateCurrencyRates,
-  dateFromString,
-  getDayOfYear,
-  getDays,
-  doKeyRatesTable,
-  templateCalcTable,
-  InputsCalcTable,
-  CalcProps,
-  DebtRow,
-  ShortTableRow,
-  MainTableRow,
-  NumToB64,
-  //NumFromB64,
-  shortDate,
-  fromCalcB64Data,
-  sharelink,
-} from './common';
-
-const txtColor = import.meta.env.VITE_TXT_COLOR;
-const accentTextColor = import.meta.env.VITE_ACCENT_TEXT_COLOR || '';
-//const backgroundColor = import.meta.env.VITE_BACKGROUND_COLOR || '';
-//const hintColor = import.meta.env.VITE_HINT_COLOR || '';
-
-import { FC, ReactNode, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 //text, barcodes, image,
 import { Template } from '@pdfme/common';
@@ -52,8 +27,6 @@ import { classNames } from 'primereact/utils';
 
 import { AppSection } from '../AppSection/AppSection';
 
-import { Document, Packer, Paragraph, TextRun } from 'docx';
-
 import { QRCodeStyling } from '@liquid-js/qr-code-styling';
 
 import { botMethod, PreparedInlineMessage, deleteMessage } from '@/api/bot/methods';
@@ -61,65 +34,31 @@ import { botMethod, PreparedInlineMessage, deleteMessage } from '@/api/bot/metho
 import './Calc.css';
 //import { BoxArrowRight, ChatLeftDots, QrCodeScan } from 'react-bootstrap-icons';
 import { Dialog } from 'primereact/dialog';
-import React from 'react';
 
-//import { segodnya } from './functions';
+import { PrimeReactFlex } from '@/components/PrimeReactFlex/PrimeReactFlex';
+
 addLocale('ru', RU.ru);
 locale('ru');
 
-const today = new Date();
-console.log("is working day: ", isWorkingDay(today.getFullYear(),today.getMonth()+1,today.getDate()));
-
 const debtdecrease = [
   // после отладки удалить
-  { id: 1, date: dateFromString('11.02.2025'), sum: 1000 },
-  { id: 2, date: dateFromString('11.03.2025'), sum: 2000 },
-  { id: 3, date: dateFromString('11.04.2025'), sum: 3000 },
+  { id: 1, date: common.dateFromString('11.02.2025'), sum: 1000 },
+  { id: 2, date: common.dateFromString('11.03.2025'), sum: 2000 },
+  { id: 3, date: common.dateFromString('11.04.2025'), sum: 3000 },
 ];
 
 const debtincrease = [
   // после отладки удалить
-  { id: 1, date: dateFromString('12.02.2025'), sum: 3000 },
-  { id: 2, date: dateFromString('12.03.2025'), sum: 2000 },
-  { id: 3, date: dateFromString('12.04.2025'), sum: 1000 },
+  { id: 1, date: common.dateFromString('12.02.2025'), sum: 3000 },
+  { id: 2, date: common.dateFromString('12.03.2025'), sum: 2000 },
+  { id: 3, date: common.dateFromString('12.04.2025'), sum: 1000 },
 ];
-
-const currencies = [
-  { name: '₽', value: 1, text: 'Российский рубль', eng: 'RUB', rus: 'руб.' },
-  { name: '$', value: 2, text: 'Доллар США', eng: 'USD', rus: 'долл.' },
-  { name: '€', value: 3, text: 'Евро', eng: 'EUR', rus: 'евро' },
-];
-
-// Интерфейс параметров для функции обратного вызова для обработки blob PDF
-interface IParamsDoWithPDF {
-  sendAdmin?: boolean;            // Признак отправки админу
-  cb?: (result: any) => void;     // Обработка результата обратного вызова
-  caption?: string;               // Заголовок
-  type?: number;                  // Тип расчета
-}
-
-// Интерфейс функции обратного вызова для обработки blob PDF
-interface IDoWithPDF {
-  (
-    blob: Blob,                       // Blob PDF
-    InitialData: any,                 // Данные инициализации приложения
-    params?: IParamsDoWithPDF         // Параметры
-  ) : void 
-}
-
-export const PrimeReactFlex = ({ children }: { children: ReactNode }) => {
-  return (
-    <div className="p-inputgroup flex-1">
-      {children}
-    </div>
-  )
-}
 
 function doGeneratePdf(
   template: Template,                 // Шаблон
-  inputs: InputsCalcTable[],          // Входные данные
+  inputs: common.InputsCalcTable[],   // Входные данные
   InitialData: any,                   // Данные инициализации приложения
-  cb: IDoWithPDF,                     // Функция обратного вызова
+  cb: common.IDoWithPDF,                     // Функция обратного вызова
   caption?: string,                   // Заголовок
   //type?: number                     // Тип расчета
 ) {
@@ -139,7 +78,7 @@ function doGeneratePdf(
     const ID = InitialData || '';
     // Отправляем PDF в функцию-обработчик
     // передача blob PDF в функцию обратного вызова
-    const params: IParamsDoWithPDF = {
+    const params: common.IParamsDoWithPDF = {
       sendAdmin: false,                             // Признак отправки админу
       cb: logresult,                                // обработка результата обратного вызова
       caption: caption || 'Документ с расчётом'     // заголовок документа
@@ -153,7 +92,7 @@ function doGeneratePdf(
 function sendDocumentBlob(
   blob: Blob,
   InitialData: any,
-  params?: IParamsDoWithPDF
+  params?: common.IParamsDoWithPDF
 ) {
   const ID = InitialData || '';
 
@@ -221,7 +160,7 @@ function sendDocumentBlob(
 function sendPreparedBlob(
   blob: Blob,
   InitialData: any,
-  params?: IParamsDoWithPDF
+  params?: common.IParamsDoWithPDF
 ) {
   // Выполнить все Этапы
   // 1. Создание документа
@@ -304,7 +243,7 @@ function sendPreparedBlob(
       params?.cb && params.cb(result); // объединить вывод в консоль
 
       const PIM: PreparedInlineMessage = result.payload?.result;
-      console.log(PIM.id);
+      console.log('PIM.id: ',PIM.id);
       postEvent('web_app_send_prepared_message', {
         id: PIM.id.toString()
       });
@@ -331,9 +270,9 @@ function sendPreparedBlob(
 
 // Функция на замену doPDF и sendPDF
 function doWithCalculation(
-  mainTable: MainTableRow[],
+  mainTable: common.MainTableRow[],
   InitialData?: any,
-  func?: IDoWithPDF,
+  func?: common.IDoWithPDF,
   setEventStatus?: (data: string) => void,
   caption?: string
 ) {
@@ -342,17 +281,17 @@ function doWithCalculation(
   setEventStatus && setEventStatus(EventStatus);
   const ID = InitialData || '';
   
-  let currentShortRow: ShortTableRow | null = null; // текущая строка
+  let currentShortRow: common.ShortTableRow | null = null; // текущая строка
 
-  let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-  let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+  let lastShortRow: common.ShortTableRow | null = null; // предыдущая строка в группе
+  let lastRow: common.MainTableRow | null = null; // предыдущая строка главной таблицы
   let lastDaysInYear = 365; // количество дней в году по умолчанию
 
-  let rows: ShortTableRow[] = [];
+  let rows: common.ShortTableRow[] = [];
 
   mainTable.map((row, index, array) => {
     // количество дней в году для текущей даты
-    const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+    const daysInYear = common.getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
     
     // проверка на изменение ключевых параметров
     const setNewShortRow = 
@@ -371,7 +310,7 @@ function doWithCalculation(
         o: row.out,
         pcnt: row.percent,
         plty: row.penalty  
-      } as ShortTableRow;
+      } as common.ShortTableRow;
       if (lastShortRow) {
         rows.push(lastShortRow);
       } else {
@@ -400,7 +339,7 @@ function doWithCalculation(
       s: row.date,
       e: row.date,
       ...row
-    } as ShortTableRow;
+    } as common.ShortTableRow;
 
     lastShortRow = currentShortRow;
     // после проверки текущий ряд сохраняем в переменную
@@ -422,7 +361,7 @@ function doWithCalculation(
     // Вычисление количества дней между двумя датами
     const diffInDays = Math.round(diffInTime / oneDay);
 
-    const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+    const daysInYear = common.getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
 
     const sumin = row.i;
     const inc = row.inc;
@@ -447,7 +386,7 @@ function doWithCalculation(
 
   const title = caption;
 
-  const inputsTable: InputsCalcTable[] = [
+  const inputsTable: common.InputsCalcTable[] = [
     {
       "title": title || "Расчёт процентов (неустойки)",
       "Calculation": inputsArr,
@@ -456,7 +395,7 @@ function doWithCalculation(
     }
   ];
   
-  func && doGeneratePdf(templateCalcTable, inputsTable, ID, func, caption );
+  func && doGeneratePdf(common.templateCalcTable, inputsTable, ID, func, caption );
 }
   /*
   const pdf_content = { content: "<h1>Welcome to html-pdf-node-ts</h1>" };
@@ -476,20 +415,56 @@ function doWithCalculation(
   });
   */
 
-export const Calc: FC<CalcProps> = ({type}) => {
+export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
-  const [debt, setDebt] = useState<number>(0);
-  const [currency, setCurrency] = useState(1); // 1 - RUB, 2 - USD, 3 - EUR
-  const [datefrom, setDateFrom] = useState<Date>();
-  const [dateto, setDateTo] = useState<Date>();
+  const footer = type !==1 ? 'Расчёт процентов за пользовании чужими денежными средствами в соответствии с положениями ст.395 ГК РФ': 'Расчёт неустойки, предусмотренной соглашением между сторонами';
+
+  let period: [number, number] = [0,0]; console.log(period);
+  let decrease: Array<[number, number]> = [[0,0]]; 
+  let increase: Array<[number, number]> = [[0,0]];
+  
+  let periodfrom: Date = new Date();
+  let periodto: Date = new Date(); 
+
+  if (calcdata) {
+    period = calcdata[1];
+    periodfrom = common.getDateFromNum(calcdata[1][0]);
+    periodto = common.getDateFromNum(calcdata[1][1]);
+    decrease = calcdata[2][0];
+    increase = calcdata[2][1];
+  }
+
+  const propsdecrease = decrease.map((row, index) => {
+    const result: common.DebtRow = {
+      id: index,
+      date: common.getDateFromNum(row[0]),
+      sum: row[1]
+    }
+    return result;
+  });
+
+  const propsincrease = increase.map((row, index) => {
+    const result: common.DebtRow = {
+      id: index,
+      date: common.getDateFromNum(row[0]),
+      sum: row[1]
+    }
+    return result;
+  });
+
+
+  const [debt, setDebt] = useState<number>(calcdata ? calcdata[0][1]:0);
+  const [currency, setCurrency] = useState(calcdata ? calcdata[0][2]:1); // 1 - RUB, 2 - USD, 3 - EUR
+  const [datefrom, setDateFrom] = useState<Date|undefined>(calcdata && periodfrom);
+  const [dateto, setDateTo] = useState<Date|undefined>(calcdata && periodto);
   const [numberOfDays, setNumberOfDays] = useState(0);
-  const [rate, setRate] = useState(0);
-  const [periodtype, setPeriodType] = useState(1); // 1 - День, 2 - Год
+  const [rate, setRate] = useState(calcdata ? calcdata[0][3]:0);
+  const [periodtype, setPeriodType] = useState(calcdata ? calcdata[0][4]:1); // 1 - День, 2 - Год
   const [USD, setUSD] = useState(0);
   const [EUR, setEUR] = useState(0);
-  const [DebtDecrease, setDebtDecrease] = useState<DebtRow[]>(debtdecrease); // Платежи в погашение долга
-  const [DebtIncrease, setDebtIncrease] = useState<DebtRow[]>(debtincrease); // Увеличение долга
-  const [Rows, setRows] = useState<ShortTableRow[]>(); // текущая группа
+  const [DebtDecrease, setDebtDecrease] = useState<common.DebtRow[]>(calcdata ? propsdecrease : debtdecrease); // Платежи в погашение долга
+  const [DebtIncrease, setDebtIncrease] = useState<common.DebtRow[]>(calcdata ? propsincrease : debtincrease); // Увеличение долга
+  const [Rows, setRows] = useState<common.ShortTableRow[]>(); // текущая группа
   const [sum, setSum] = useState(0);
   const [crushedData, setCrushedData] = useState<string>('');
   const [
@@ -510,96 +485,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
   const tgWebAppData = LP?.tgWebAppData;
   const ID = tgWebAppData; console.log('ID: ', ID?.user?.id);
 
-  /*
-  function doCalcData(): [
-        [number | undefined, number, number, number, number],
-        [number, number],
-        [Array<[number, number]>, Array<[number, number]>]
-  ] {
-    const decrease = DebtDecrease.map((item) => {
-        const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
-        return result;
-      }
-    );
-    const increase = DebtIncrease.map((item) => {
-      const result: [number, number] = [ Number(item.date.toLocaleDateString().replace('.','').replace('.','')), item.sum ];
-        return result;
-      }
-    );
-
-    const from = datefrom !== undefined ? Number(datefrom.toLocaleDateString().replace('.','').replace('.','')) : 0;
-    const to = dateto !== undefined ? Number(dateto.toLocaleDateString().replace('.','').replace('.','')) : 0;
-
-    return  [
-              [type, debt, currency, rate, periodtype],
-              [from, to],
-              [decrease, increase]
-            ];
-  }
-  */
-
-  function doCalcB64Data(): [
-        string,
-        string,
-        string[],
-        string[]
-    ] {
-      // использовать вместо вложенного массива строку разделенными точками
-      const decrease = DebtDecrease.map((item) => {
-          const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
-          return result;
-        }
-      );
-      const increase = DebtIncrease.map((item) => {
-        const result: string = NumToB64(Number(shortDate(item.date).replace('.','').replace('.',''))) + '.' + NumToB64(item.sum);
-          return result;
-        }
-      );
-
-      const from = datefrom !== undefined ? NumToB64(Number(shortDate(datefrom).replace('.','').replace('.',''))) : '0';
-      const to = dateto !== undefined ? NumToB64(Number(shortDate(dateto).replace('.','').replace('.',''))) : '0';
-
-      const base = (type ? NumToB64(type) : '') + '.' +
-                    NumToB64(debt) + '.' +
-                    NumToB64(currency) + '.' +
-                    NumToB64(rate) + '.' +
-                    NumToB64(periodtype);
-      const period = (from + '.' + to);
-
-      return  [
-                // вместо массива строка, разделенная точками
-                base,
-                period,
-                decrease,
-                increase
-              ];
-  }
-
-  // Сжатие параметров расчёта для url
-  /*
-  function crushedCalcData() {
-    const calcData = doCalcData();
-    const calcB64Data = doCalcB64Data();
-    const crushed = jsoncrush.default.crush(JSON.stringify(calcData)).replace(/\u0001/g, '%01');
-    setCrushedData(crushed);
-    const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
-    return crushed;
-  }
-  */
-
-  function crushedCalcB64Data() {
-    const calcB64Data = doCalcB64Data();
-    const crushedB64 = jsoncrush.default.crush(JSON.stringify(calcB64Data)).replace(/\u0001/g, '%01');
-    setCrushedData(crushedB64);
-    return crushedB64;
-  }
-
-  // Получение параметров расчёта из url
-  function uncrushedCalcData(crushed?: string) {
-    const uncrushed = crushed !== undefined ? JSON.parse(jsoncrush.default.uncrush(crushed.replace(/%01/g, '\u0001'))) : crushedData;
-    return uncrushed;
-  }
-
   useEffect(() => {
     console.log('%cUSD: ','color: cyan;', USD);
     console.log('%cEUR: ','color: cyan;', EUR);
@@ -607,58 +492,33 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
   useEffect(() => {
 
-    updateCurrencyRates(setUSD, setEUR);
+    common.updateCurrencyRates(setUSD, setEUR);
     
     if (datefrom && dateto) {
       const newMainTable = doMainTable(datefrom, dateto, type, rate, periodtype);
       //setMainTable(newMainTable);
       const newShortTable = doShortTable(newMainTable);
-      const calcB64Data = doCalcB64Data();
-      console.log(calcB64Data);
-      console.log('crushedCalcB64Data: ', crushedCalcB64Data());
+      //const calcB64Data = common.doCalcB64Data(datefrom, dateto, type, debt, currency, rate, periodtype, debtdecrease, debtincrease);
+      //console.log(calcB64Data);
+      console.log('crushedCalcB64Data: ', common.crushedCalcB64Data(datefrom, dateto, type, debt, currency, rate, periodtype, debtdecrease, debtincrease, setCrushedData));
       
-      // clc + bro
-      const u = crushedCalcB64Data();
-      const a = uncrushedCalcData(u); // удалить после тестирования
-
-      console.log(fromCalcB64Data(a));
-
+      // кодирование clc + bro в ссылку
+      const u = common.crushedCalcB64Data(datefrom, dateto, type, debt, currency, rate, periodtype, debtdecrease, debtincrease, setCrushedData);
       const bro = Number(ID?.user?.id);
-      const b64 = NumToB64(bro);
-      console.log('bro64: ', b64);
-      const link = sharelink(b64, u);
+      const b64 = common.NumToB64(bro);
+      //console.log('bro64: ', b64);
+      const link = common.sharelink(b64, u);
       setUrl(link);
       console.log('URL: ', ''+link);
-
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun(title),
-                  new TextRun({
-                      text: title,
-                      bold: true,
-                  }),
-                  new TextRun({
-                      text: "\tCasebook{killer} is the best",
-                      bold: true,
-                  }),
-                ],
-              }),
-            ],
-          },
-        ],
-      });
-      
-      // Used to export the file into a blob
-      Packer.toBlob(doc).then((blob) => {
-        let dataURL = URL.createObjectURL(blob);
-        console.log(dataURL);
-      });
       setRows(newShortTable);
+      //const LP = retrieveLaunchParams();
+      const link2 = LP?.tgWebAppData?.start_param;
+      link2 && common.getCalcData(link2);
+
+      // тест декодирования, эта функция нужна после перехода в бот по ссылке или qr-коду
+      const a = common.uncrushedCalcData(u, crushedData); // удалить после тестирования
+      console.log(common.fromCalcB64Data(a));
+      
     }
   }, [debt, datefrom, dateto, rate, periodtype]);
   
@@ -678,23 +538,23 @@ export const Calc: FC<CalcProps> = ({type}) => {
     }
   ]
 
-  function getMaxDebtRowId( array: DebtRow[] ) {
+  function getMaxDebtRowId( array: common.DebtRow[] ) {
     let maxId = 0;
     for (let i = 0; i < array.length; i++) if (array[i].id > maxId) maxId = array[i].id;
     return maxId;
   }
 
-  function doShortTable(mainTable: MainTableRow[]) {
+  function doShortTable(mainTable: common.MainTableRow[]) {
     
-    let currentShortRow: ShortTableRow | null = null; // текущая строка
-    let lastShortRow: ShortTableRow | null = null; // предыдущая строка в группе
-    let lastRow: MainTableRow | null = null; // предыдущая строка главной таблицы
+    let currentShortRow: common.ShortTableRow | null = null; // текущая строка
+    let lastShortRow: common.ShortTableRow | null = null; // предыдущая строка в группе
+    let lastRow: common.MainTableRow | null = null; // предыдущая строка главной таблицы
     let lastDaysInYear = 365; // количество дней в году
 
-    let rows: ShortTableRow[] = [];
+    let rows: common.ShortTableRow[] = [];
 
     mainTable.map((row, index, array) => {
-      const daysInYear = getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
+      const daysInYear = common.getDayOfYear(new Date(row.date.getFullYear(), 11, 31));
 
       // проверка на изменение ключевых параметров
       const setNewShortRow = 
@@ -713,7 +573,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
           o: row.out,
           pcnt: row.percent,
           plty: row.penalty  
-        } as ShortTableRow;
+        } as common.ShortTableRow;
         if (lastShortRow) {
           rows.push(lastShortRow);
         } else {
@@ -743,7 +603,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
         s: row.date,
         e: row.date,
         ...row
-      } as ShortTableRow;
+      } as common.ShortTableRow;
 
       lastShortRow = currentShortRow;
       // после проверки текущий ряд сохраняем в переменную
@@ -765,7 +625,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
       // Вычисление количества дней между двумя датами
       const diffInDays = Math.round(diffInTime / oneDay);
 
-      const daysInYear = getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
+      const daysInYear = common.getDayOfYear(new Date(row.s.getFullYear(), 11, 31));
 
       const sumin = row.i;
       const inc = row.inc;
@@ -806,12 +666,13 @@ export const Calc: FC<CalcProps> = ({type}) => {
     const title = type !==1 ? 'Расчёт процентов по ст.395 ГК РФ': 'Расчёт договорной неустойки';
     console.log('type: ', title);
     console.log('rate: ', rate );
+    //const footer = type !==1 ? 'Расчёт процентов за пользовании чужими денежными средствами в соответствии с положениями ст.395 ГК РФ': 'Расчёт неустойки, предусмотренной соглашением между сторонами';
         
-    const keyratesTable = doKeyRatesTable(); // ключевые ставки по дням
+    const keyratesTable = common.doKeyRatesTable(); // ключевые ставки по дням
     console.log(keyratesTable);
 
-    const newMainTable: MainTableRow[] = [];
-    const n = getDays(from, to);
+    const newMainTable: common.MainTableRow[] = [];
+    const n = common.getDays(from, to);
     const newArray = new Array(n).fill(null).map((_, i) => i + 1);
 
     const currentDate = new Date();
@@ -826,7 +687,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
       const indexDate = new Date(from.getFullYear(), from.getMonth(), from.getDate() + index);
 
-      const daysInYear = getDayOfYear(new Date(indexDate.getFullYear(), 11, 31));
+      const daysInYear = common.getDayOfYear(new Date(indexDate.getFullYear(), 11, 31));
 
       const inFuture = indexDate > currentDate;
 
@@ -862,7 +723,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
 
       debtsumout = debtsumin + increase - decrease;
 
-      const newRow: MainTableRow = {
+      const newRow: common.MainTableRow = {
         id: item,
         date: indexDate,
         in: debtsumin,
@@ -893,10 +754,9 @@ export const Calc: FC<CalcProps> = ({type}) => {
       ...prevDebtPayments,
       { date: new Date(), sum: 0 },
     ]);
-
   */
 
-  const dateDebtTemplate = (row: DebtRow) => {
+  const dateDebtTemplate = (row: common.DebtRow) => {
     const value = row.date;
     return (
       <Calendar
@@ -911,7 +771,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
     );
   }
 
-  const sumDebtDecreaseTemplate = (rowData: DebtRow) => {
+  const sumDebtDecreaseTemplate = (rowData: common.DebtRow) => {
     const value: number = rowData.sum;
     
     return (
@@ -937,7 +797,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
     );
   }
 
-  const sumDebtIncreaseTemplate = (rowData: DebtRow) => {
+  const sumDebtIncreaseTemplate = (rowData: common.DebtRow) => {
     const value: number = rowData.sum;
     
     return (
@@ -963,7 +823,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
     );
   }
 
-  const calcRowTemplate = (Row: ShortTableRow, index: number) => {
+  const calcRowTemplate = (Row: common.ShortTableRow, index: number) => {
     // В расчёте необходима проверка для перехода года на следующий год
     // При создании maintable надо проверять год на високосный год
     //console.log('Row: ', Row);
@@ -997,8 +857,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
                   <div className="inline-block">
                     {
                       periodtype === 2 ? 
-                        Row.pcnt?.toFixed(2) + ' % / ' + getDayOfYear(new Date(Row.e.getFullYear(), 11, 31)):
-                        Row.pcnt !== undefined && (Row.pcnt / getDayOfYear(new Date(Row.e.getFullYear(), 11, 31))).toFixed(4) + ' %'
+                        Row.pcnt?.toFixed(2) + ' % / ' + common.getDayOfYear(new Date(Row.e.getFullYear(), 11, 31)):
+                        Row.pcnt !== undefined && (Row.pcnt / common.getDayOfYear(new Date(Row.e.getFullYear(), 11, 31))).toFixed(4) + ' %'
                     }
                   </div>
                   <div className="inline-block w-rem h-rem text-left mx-1">*</div>
@@ -1033,7 +893,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
     );
   };
 
-  const calcResultTemplate = (Rows: ShortTableRow[]) => {
+  const calcResultTemplate = (Rows: common.ShortTableRow[]) => {
       if (!Rows || Rows.length === 0) return null;
 
       let list = Rows.map((Row, index) => {
@@ -1086,7 +946,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
               <div
                 className="inline-block h-rem text-left app theme-accent-text-color"
               >
-                Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()} {currencies.filter(c => c.value === currency)[0]?.name}
+                Сумма процентов: {sum && parseFloat(sum.toFixed(2)).toLocaleString()} {common.currencies.filter(c => c.value === currency)[0]?.name}
               </div>
             </div>
           </div>
@@ -1094,7 +954,6 @@ export const Calc: FC<CalcProps> = ({type}) => {
       </div>
     );
   }
-
 
   function QRCode_Styling({text}: {text: string}) {
     const LP = retrieveLaunchParams();
@@ -1169,8 +1028,8 @@ export const Calc: FC<CalcProps> = ({type}) => {
     });
 
     useEffect(() => {
-      console.log('%cQRCode: %o', `color: ${txtColor}`, qrCodeWB);
-      console.log('%cQRCodeBW: %o', `color: ${txtColor}`, qrCodeBW);
+      console.log('%cQRCode: %o', `color: ${common.colors.text}`, qrCodeWB);
+      console.log('%cQRCodeBW: %o', `color: ${common.colors.text}`, qrCodeBW);
       
       function getSize(qrCode: QRCodeStyling) {
         return {width: qrCode.size?.width, height: qrCode.size?.height};
@@ -1266,7 +1125,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
             overflowY: 'hidden',
           }}>
             <div className="QRFlip">
-              <h4 style={{color: accentTextColor, margin: '0px 0px 10px 0px'}}>Нажми для изменения цвета</h4>
+              <h4 style={{color: common.colors.accent, margin: '0px 0px 10px 0px'}}>Нажми для изменения цвета</h4>
               <div className="container">
                 <div
                   className={`flip-card ${
@@ -1442,7 +1301,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
       <PrimeReactProvider>
       <Panel
         header={title || 'Заголовок'}
-        footer={'Подвал'}
+        footer={footer || 'Подвал'}
         className='m-1 shadow-5'
       >
         {/* --раздел-- */}
@@ -1462,7 +1321,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
                 value={currency} 
                 onChange={(e) => setCurrency(e.value)} 
                 optionLabel="name" 
-                options={currencies}
+                options={common.currencies}
               />
             </div>
           }
@@ -1507,7 +1366,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
                 onChange={(e: any) => {
                   setDateFrom(e.value);
                   if (dateto) {
-                    setNumberOfDays(getDays(e.value, dateto));
+                    setNumberOfDays(common.getDays(e.value, dateto));
                   }
                 }}
                 placeholder='От'
@@ -1522,7 +1381,7 @@ export const Calc: FC<CalcProps> = ({type}) => {
                 onChange={(e: any) => {
                   setDateTo(e.value);
                   if (datefrom) {
-                    setNumberOfDays(getDays(datefrom, e.value));
+                    setNumberOfDays(common.getDays(datefrom, e.value));
                   }
 
                 }}

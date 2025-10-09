@@ -225,23 +225,36 @@ td[data-pc-name="datatable"] {
 }
 
 .p-selectbutton .p-button {
-    background: var(--tg-theme-secondary-bg-color);
-    border: 1px solid #424b57;
-    color: rgba(255, 255, 255, 0.87);
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  background: var(--tg-theme-secondary-bg-color);
+  border: 1px solid #424b57;
+  color: rgba(255, 255, 255, 0.87);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.p-button-group .p-button:not(:first-of-type):not(:last-of-type) {
+  border-radius: 0;
+}
+
+.p-button-group .p-button:not(:last-child) {
+    border-right: 0 none;
 }
 
 .p-datatable .p-datatable-thead > tr > th {
-    text-align: left;
-    padding: 0.5rem 0.5rem;
-    border: 1px solid #424b57;
-    border-width: 0 0 1px 0;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.87);
-    background: var(--tg-theme-secondary-bg-color);
-    transition: box-shadow 0.2s;
+  text-align: left;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid #424b57;
+  border-width: 0 0 1px 0;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.87);
+  background: var(--tg-theme-secondary-bg-color);
+  transition: box-shadow 0.2s;
 }
 
+.p-datatable .p-datatable-tbody > tr {
+  background: var(--tg-theme-secondary-bg-color);
+  color: rgba(255, 255, 255, 0.87);
+  transition: box-shadow 0.2s;
+}
 
 
 .QRFlip {

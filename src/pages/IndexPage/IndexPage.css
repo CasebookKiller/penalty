@@ -63,3 +63,21 @@
     transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
     border-radius: 6px;
 }
+
+#messages > div {
+  display: flex;
+  flex-grow: 0!important;
+  width: 100%;
+}
+
+#messages > div > .p-message{
+  flex-grow: 0!important;
+  width: 100%;
+}
+
+#messages > div > .p-message.p-message-info {
+    background: rgba(59, 130, 246, 0.2);
+    border: solid var(--tg-theme-link-color);
+    border-width: 0 0 0 6px;
+    color: #93c5fd;
+}
