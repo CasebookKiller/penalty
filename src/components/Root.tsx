@@ -52,6 +52,7 @@ async function doInit() {
   
 }
 const Inner: FC<InnerProps> = ({ Component, pageProps }) => {
+  
   console.log('Запуск приложения');
   console.log(`Для запуска приложения в режиме отладки запустите бот с параметром: ?startapp=debug\n
     https://t.me/{botusername}/{appname}?startapp=debug`);

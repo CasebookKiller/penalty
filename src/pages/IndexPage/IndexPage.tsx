@@ -170,7 +170,7 @@ const AppHeader: FC = () => {
     console.log('%corderedParams: ', `background-color: white; color: black;`, orderedParams);
 
     getIds();
-
+    console.log('%c BRO:::: %o', 'color: red; background: white;', bro);
     console.log('%cID: %o', `color: lightgreen`, ID);
     if (ID?.user?.id) {
       getTGId(ID?.user?.id.toString()).then((result) => {
@@ -771,6 +771,9 @@ export const IndexPage: FC = () => {
       >
         <div className='block text-center mb-2'>
           <Chip className='text-2xs shadow-3' label={'UId: ' + userId}/>
+        </div>
+        <div className='block text-center mb-2'>
+          <span>{'Платформа: ' + LP.tgWebAppPlatform}</span>
         </div>
         <div className='block text-center mb-1'>
           <span>Калькулятор неустойки и процентов за пользование чужими денежными средствами</span>

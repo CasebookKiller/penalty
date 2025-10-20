@@ -256,6 +256,12 @@ td[data-pc-name="datatable"] {
   transition: box-shadow 0.2s;
 }
 
+.p-dataview .p-dataview-content {
+    background: var(--tg-theme-section-bg-color);
+    color: var(--tg-theme-text-color); /*rgba(255, 255, 255, 0.87);*/
+    border: 0 none;
+    padding: 0;
+}
 
 .QRFlip {
   text-align: center;

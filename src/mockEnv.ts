@@ -59,13 +59,12 @@ if (import.meta.env.DEV) {
         ['signature', '89d6079ad6762351f38c6dbbc41bb53048019256a9443988af7a48bcad16ba31'],
         ['auth_date', Date.now().toString()],
         //['start_param', 'debugbro275342303'],
-        ['start_param', "debugclc!1.oqw.1.a.2'~2GJ.WQt'(qWh.fE'~qXR.vg'~qZp.KU'](tmx.KU'~to5.vg'~tpF.fE']]!['(,!%01(!_brogqmfv"],
+        //['start_param', "debugclc!1.oqw.1.a.2'~2GJ.WQt'(qWh.fE'~qXR.vg'~qZp.KU'](tmx.KU'~to5.vg'~tpF.fE']]!['(,!%01(!_brogqmfv"],
         //['start_param', 'debug'],
-        //https://t.me/tgpen_bot/app?startapp=clc!1.oqw.1.a.2'~2GJ.WQt'(qWh.fE'~qXR.vg'~qZp.KU'](tmx.KU'~to5.vg'~tpF.fE']]!['(,!%01(!_brogqmfv
         ['chat_type', 'sender'],
         ['chat_instance', '8428209589180549439'],
       ]),
-      tgWebAppStartParam: 'debug',
+      tgWebAppStartParam: '',//'debug',
       tgWebAppVersion: '9',
       tgWebAppPlatform: 'tdesktop',
     };

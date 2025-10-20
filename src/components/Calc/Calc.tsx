@@ -14,7 +14,7 @@ import { generate } from '@pdfme/generator';
 import { openTelegramLink, retrieveLaunchParams } from '@telegram-apps/sdk-react';
 import { postEvent, on } from '@telegram-apps/bridge';
 
-import { addLocale, locale, PrimeReactProvider } from 'primereact/api';
+import { addLocale, locale as Locale, PrimeReactProvider } from 'primereact/api';
 import { Panel } from 'primereact/panel';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -37,8 +37,10 @@ import { Dialog } from 'primereact/dialog';
 
 import { PrimeReactFlex } from '@/components/PrimeReactFlex/PrimeReactFlex';
 
-addLocale('ru', RU.ru);
-locale('ru');
+const lng = 'ru';
+
+addLocale(lng, RU.ru);
+Locale(lng);
 
 const debtdecrease = [
   // после отладки удалить
@@ -414,8 +416,12 @@ function doWithCalculation(
     console.log('PDF: ', pdf);
   });
   */
+import { useContext } from 'react';
+import LocaleContext from '@/locale/LocaleContext'
 
 export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
+  const {locale} = useContext(LocaleContext)
+
   const title = type !== 1 ? 'Расчет процентов по статье 395 ГК РФ': 'Расчет договорной неустойки';
   const footer = type !==1 ? 'Расчёт процентов за пользовании чужими денежными средствами в соответствии с положениями ст.395 ГК РФ': 'Расчёт неустойки, предусмотренной соглашением между сторонами';
 
@@ -766,7 +772,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
         onChange={(e: any) => e.value}
         touchUI
         showIcon
-        locale='ru'
+        locale={locale}
       />
     );
   }
@@ -778,7 +784,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
       <div className="p-inputgroup flex-1">
         <InputNumber
           value={value}
-          locale='ru'
+          locale={locale}
           //ref={(input) => input && input.focus()}
           onValueChange={(e) => {
             let newDebtDecrease = [...DebtDecrease];
@@ -788,7 +794,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
         />
         <Button icon="pi pi-times" className='debttrash' onClick={
             () => {
-              locale('ru');
+              Locale(locale);
               setDebtDecrease(DebtDecrease.filter((p) => p.id !== rowData.id));
             }
           }
@@ -804,7 +810,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
       <div className="p-inputgroup flex-1">
         <InputNumber
           value={value}
-          locale='ru'
+          locale={locale}
           //ref={(input) => input && input.focus()}
           onValueChange={(e) => {
             let newDebtIncrease = [...DebtIncrease];
@@ -814,7 +820,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
         />
         <Button icon="pi pi-times" className='debttrash' onClick={
             () => {
-              locale('ru');
+              Locale(locale);
               setDebtIncrease(DebtIncrease.filter((p) => p.id !== rowData.id));
             }
           }
@@ -1299,6 +1305,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
   return (
     <div className='calc'>
       <PrimeReactProvider>
+        
       <Panel
         header={title || 'Заголовок'}
         footer={footer || 'Подвал'}
@@ -1314,7 +1321,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
                 placeholder="Сумма задолженности"
                 value={debt}
                 onValueChange={(e) => setDebt(Number(e.value))}
-                locale='ru'
+                locale={locale}
               />
               <SelectButton 
                 id="currency"
@@ -1341,7 +1348,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
                 step={0.01}
                 suffix='%'
                 onValueChange={(e) => setRate(Number(e.value))}
-                locale='ru'
+                locale={locale}
               />
               <SelectButton 
                 id="periodtype"
@@ -1372,7 +1379,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
                 placeholder='От'
                 touchUI
                 showIcon
-                locale='ru'
+                locale={locale}
               />
               <div className='m-1'/>
               <Calendar
@@ -1388,7 +1395,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
                 placeholder='До'
                 touchUI
                 showIcon
-                locale='ru'
+                locale={locale}
               />
               <div className='m-1'/>
               
@@ -1396,7 +1403,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
                   className='numberOfDays'
                   value={numberOfDays}
                   disabled
-                  locale='ru'
+                  locale={locale}
                 />
               
               
@@ -1406,11 +1413,16 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
           subheaderNoWrap
         />
         {/* --раздел-- */}
+        
         <AppSection 
           subheader={'Оплата долга'}
           body={
             <div>
-              <DataTable value={DebtDecrease} size='small'>
+              <DataTable
+                value={DebtDecrease}
+                size='small'
+                lang={locale}
+              >
                 <Column field='id' className='debtid' header='#'/>
                 <Column field='date' className='debtdate' header='Дата' body= { dateDebtTemplate }/>
                 <Column field='sum' className='debtsum' header='Сумма' body={ sumDebtDecreaseTemplate } />
@@ -1418,7 +1430,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
               <div style={{width: '100%'}} className='flex justify-content-start'>
                 <Button icon="pi pi-plus" className='debtplus mt-2' onClick={
                   () => {
-                    locale('ru');
+                    Locale(locale);
                     setDebtDecrease([...DebtDecrease, { id: getMaxDebtRowId(DebtDecrease) + 1, date: new Date(), sum: 0}]);
                   }
                 }/>
@@ -1426,6 +1438,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
             </div>
           }
         />
+        
         {/* --раздел-- */}
           <AppSection 
           subheader={'Увеличение долга'}
@@ -1439,7 +1452,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
               <div style={{width: '100%'}} className='flex justify-content-start'>
                 <Button icon="pi pi-plus" className='debtplus mt-2' onClick={
                   () => {
-                    locale('ru');
+                    Locale(locale);
                     setDebtIncrease([...DebtIncrease, { id: getMaxDebtRowId(DebtIncrease) + 1, date: new Date(), sum: 0}]);
                   }
                 }/>
