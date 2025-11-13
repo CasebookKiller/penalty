@@ -1,5 +1,6 @@
 //https://pdfme.com/docs/getting-started
 //https://stackoverflow.com/questions/51202460/inlinequeryresultarticle-of-answerinlinequery-in-telegram-bot-api-with-google-ap
+//https://liquid-js.github.io/qrcode-generator/
 
 import * as RU from '../../locale/ru.json';
 import * as common from './common';
@@ -1048,7 +1049,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
       console.log(sizebw);
       
       // белое на чёрном 
-      qrCodeWB.serialize().then((code) => {
+      qrCodeWB.serialize().then((code: string | number | boolean | undefined) => {
         if (code !== undefined) {
           let dataURL = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(code);
           
@@ -1085,7 +1086,7 @@ export const Calc: FC<common.CalcProps> = ({type, calcdata}) => {
 
       //qrCodeWB.append(document.getElementById('canvaswb') as HTMLCanvasElement);
       // черное на белом
-      qrCodeBW.serialize().then((code) => {
+      qrCodeBW.serialize().then((code: string | number | boolean | undefined) => {
         if (code !== undefined) {
           let dataURL = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(code);
           let canvasbw: HTMLCanvasElement = document.getElementById('canvasbw') as HTMLCanvasElement;

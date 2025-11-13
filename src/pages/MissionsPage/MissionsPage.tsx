@@ -1,12 +1,6 @@
-// ЗАМЕНИТЬ ANTD-MOBLE НА PRIME-REACT
-
-const anton = false;
-
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useState } from 'react';
 
 import { openTelegramLink, shareURL, retrieveLaunchParams } from '@telegram-apps/sdk-react';
-
-import { Button as AntButton, ButtonRef as AntButtonRef } from 'antd-mobile';
 
 import { ChevronRight, Check2, Exclamation, Share } from 'react-bootstrap-icons';
 
@@ -41,7 +35,7 @@ export const MissionsPage: FC = () => {
   const tgWebAppData = LP?.tgWebAppData;
   const ID = tgWebAppData;
 
-  const refs = useRef<AntButtonRef[]>([]);
+  //const refs = useRef<AntButtonRef[]>([]);
   
   const DefaultMarker = <div className="p-timeline-event-marker" data-pc-section="marker"/>;
   const DisabledMarker = <div className="p-timeline-event-marker-disabled" data-pc-section="marker"/>;
@@ -198,50 +192,6 @@ export const MissionsPage: FC = () => {
                       </div>
                     </PrimeReactFlex>
                   </Button>
-                  { anton && <AntButton
-                    ref={el=>refs.current[item.id]=el!}
-                    className={item.status === 'disabled' ? 'app disabled' : 'app default'}
-                    onClick={() => {
-                      console.log('КЛИК', item);
-                      // здесь должна быть проверка на share
-                      if (item.after === 'share') {
-                        item.cb();
-                      } else {
-                        setMissions(missions.map((mission) => {
-                          if (mission.id === item.id) {
-                            //if (task.cb) task.cb();
-                            return {
-                              ...mission,
-                              after: 'checking'
-                            };
-                          }
-                          return mission;
-                        }));
-                        console.log('%citem.id: %o','color: yellow', item.id);
-                        setMissions(missions.map((mission) => {
-                          if (mission.id === item.id) {
-                            //if (task.cb) task.cb();
-                            return {...mission, after: checkMission(mission)};
-                          }
-                          return mission;
-                        }));
-                      }
-                    }}
-                    fill={'outline'}
-                    style={{width: '100%'}}
-                    disabled={item.status === 'disabled'}
-                  >
-                    <PrimeReactFlex>
-                      <div style={{width: '80%', textAlign: 'left'}}>{item.title}</div>
-                      <div style={{width: '20%', textAlign: 'right'}}>
-                        {item.after === 'waiting' && <ChevronRight style={{position: 'relative', marginLeft: '0.5rem', top: '0.2rem', width: '1rem', height: '1rem', stroke: 'var(--tg-theme-accent-text-color)'}} strokeWidth="2" fill="var(--tg-theme-accent-text-color)"/>}
-                        {item.after === 'checking' && <ProgressSpinner style={{marginLeft: '0.5rem', top: '0.2rem', width: '1rem', height: '1rem'}} strokeWidth="4" fill="var(--surface-ground)" animationDuration=".5s"/>}
-                        {item.after === 'success' && <Check2 style={{position: 'relative', marginLeft: '0.5rem', top: '0.2rem', width: '1rem', height: '1rem', stroke: 'var(--tg-theme-hint-color)'}} strokeWidth="2" fill="var(--tg-theme-accent-text-color)"/>}
-                        {item.after === 'error' && <Exclamation style={{position: 'relative', marginLeft: '0.5rem', top: '0.2rem', width: '1rem', height: '1rem', stroke: 'var(--tg-theme-destructive-text-color)'}} strokeWidth="1"/>}
-                        {item.after === 'share' && <Share style={{position: 'relative', marginLeft: '0.5rem', top: '0.2rem', width: '1rem', height: '1rem', stroke: 'var(--tg-theme-accent-text-color)'}} strokeWidth="1"/>}
-                      </div>
-                    </PrimeReactFlex>
-                  </AntButton>}
                 </React.Fragment>
               );
             }}

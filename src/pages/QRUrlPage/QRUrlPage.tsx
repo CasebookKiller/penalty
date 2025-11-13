@@ -1,9 +1,11 @@
+//"@liquid-js/qr-code-styling": "file:../qr-code-styling",
+    
 import { FC } from "react";
 
 import { Calc } from "@/components/Calc/Calc";
 
 import './QRUrlPage.css'
-import { App } from "antd";
+//import { App } from "antd";
 import { CalcData, getCalcData, colors } from "@/components/Calc/common";
 
 
@@ -54,7 +56,7 @@ export const QRUrlPage: FC<QRUrlPageProps> = (props) => {
   return (
     <>
       <div className="contentWrapper">
-        <App>
+        
           <Calc 
             header={type !== 1 ?
               <>Расчет процентов по статье 395 ГК РФ</>:
@@ -73,7 +75,7 @@ export const QRUrlPage: FC<QRUrlPageProps> = (props) => {
             type={type}
             calcdata={calcdata}
           />
-        </App>      
+              
       </div>
     </>
   );

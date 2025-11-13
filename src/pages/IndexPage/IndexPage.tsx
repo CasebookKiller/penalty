@@ -125,6 +125,16 @@ const AppHeader: FC = () => {
   }
 
   async function addTGIdWithBro(tgid: string, tgbro: string, username?: string) {
+    const exist = await SBase
+      .from('ids')
+      .select('*')
+      .eq('tgid', tgid);
+
+    if (exist.data && exist.data.length > 0) {
+      console.log('%cid: %o', `color: firebrick; background-color: white`, exist.data);
+      return exist.data;
+    }
+
     const result = await SBase
       .from('ids')
       .insert([
@@ -173,6 +183,7 @@ const AppHeader: FC = () => {
     console.log('%c BRO:::: %o', 'color: red; background: white;', bro);
     console.log('%cID: %o', `color: lightgreen`, ID);
     if (ID?.user?.id) {
+      
       getTGId(ID?.user?.id.toString()).then((result) => {
         if (result && result.length > 0) {
           if (result[0].username === null) {
@@ -184,10 +195,14 @@ const AppHeader: FC = () => {
       });
 
       checkTGId(ID?.user?.id.toString()).then((result) => {
-        if (result?.length) {
+        console.log('ooooooooooooooooooooooooooooooo');
+        const length = result?.length || 0;
+        if (length > 0) {
+          console.log('%c+++++++++++++++++++++++++++++++', `color: yellow`);
           console.log('%cid: %o', `color: yellow`, result);  
         } else {
-          if (bro !== '') {
+          console.log('#########');
+          if (bro !== '' && length === 0) {
             addTGIdWithBro(ID?.user?.id.toString() || '', bro || '', ID?.user?.username || '').then((result) => {
               console.log('%cid: %o', `color: yellow`, result);  
             });
