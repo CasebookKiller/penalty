@@ -369,88 +369,103 @@ gif_width                   Integer                               Optional. Widt
 gif_height                  Integer                               Optional. Height of the GIF
 gif_duration                Integer                               Optional. Duration of the GIF in seconds
 thumbnail_url               String                                URL of the static (JPEG or GIF) or animated (MPEG4) thumbnail for the result
-thumbnail_mime_type	String	Optional. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
-title	String	Optional. Title for the result
-caption	String	Optional. Caption of the GIF file to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the GIF animation
+thumbnail_mime_type         String                                Optional. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
+title                       String                                Optional. Title for the result
+caption                     String                                Optional. Caption of the GIF file to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the GIF animation
+
 InlineQueryResultMpeg4Gif
+-------------------------
 Represents a link to a video animation (H.264/MPEG-4 AVC video without sound). By default, this animated MPEG-4 file will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
 
-Field	Type	Description
-type	String	Type of the result, must be mpeg4_gif
-id	String	Unique identifier for this result, 1-64 bytes
-mpeg4_url	String	A valid URL for the MPEG4 file. File size must not exceed 1MB
-mpeg4_width	Integer	Optional. Video width
-mpeg4_height	Integer	Optional. Video height
-mpeg4_duration	Integer	Optional. Video duration in seconds
-thumbnail_url	String	URL of the static (JPEG or GIF) or animated (MPEG4) thumbnail for the result
-thumbnail_mime_type	String	Optional. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
-title	String	Optional. Title for the result
-caption	String	Optional. Caption of the MPEG-4 file to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video animation
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be mpeg4_gif
+id                          String                                Unique identifier for this result, 1-64 bytes
+mpeg4_url                   String                                A valid URL for the MPEG4 file. File size must not exceed 1MB
+mpeg4_width                 Integer                               Optional. Video width
+mpeg4_height                Integer                               Optional. Video height
+mpeg4_duration              Integer                               Optional. Video duration in seconds
+thumbnail_url               String                                URL of the static (JPEG or GIF) or animated (MPEG4) thumbnail for the result
+thumbnail_mime_type         String                                Optional. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
+title                       String                                Optional. Title for the result
+caption                     String                                Optional. Caption of the MPEG-4 file to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the video animation
+
 InlineQueryResultVideo
+----------------------
 Represents a link to a page containing an embedded video player or a video file. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
 
 If an InlineQueryResultVideo message contains an embedded video (e.g., YouTube), you must replace its content using input_message_content.
 
-Field	Type	Description
-type	String	Type of the result, must be video
-id	String	Unique identifier for this result, 1-64 bytes
-video_url	String	A valid URL for the embedded video player or video file
-mime_type	String	MIME type of the content of the video URL, “text/html” or “video/mp4”
-thumbnail_url	String	URL of the thumbnail (JPEG only) for the video
-title	String	Title for the result
-caption	String	Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the video caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-video_width	Integer	Optional. Video width
-video_height	Integer	Optional. Video height
-video_duration	Integer	Optional. Video duration in seconds
-description	String	Optional. Short description of the result
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video. This field is required if InlineQueryResultVideo is used to send an HTML-page as a result (e.g., a YouTube video).
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be video
+id                          String                                Unique identifier for this result, 1-64 bytes
+video_url                   String                                A valid URL for the embedded video player or video file
+mime_type                   String                                MIME type of the content of the video URL, “text/html” or “video/mp4”
+thumbnail_url               String                                URL of the thumbnail (JPEG only) for the video
+title                       String                                Title for the result
+caption                     String                                Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the video caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+video_width                 Integer                               Optional. Video width
+video_height                Integer                               Optional. Video height
+video_duration              Integer                               Optional. Video duration in seconds
+description                 String                                Optional. Short description of the result
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the video. This field is required if InlineQueryResultVideo is used to send an HTML-page as a result (e.g., a YouTube video).
+
 InlineQueryResultAudio
+----------------------
 Represents a link to an MP3 audio file. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
 
-Field	Type	Description
-type	String	Type of the result, must be audio
-id	String	Unique identifier for this result, 1-64 bytes
-audio_url	String	A valid URL for the audio file
-title	String	Title
-caption	String	Optional. Caption, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the audio caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-performer	String	Optional. Performer
-audio_duration	Integer	Optional. Audio duration in seconds
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the audio
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be audio
+id                          String                                Unique identifier for this result, 1-64 bytes
+audio_url                   String                                A valid URL for the audio file
+title                       String                                Title
+caption                     String                                Optional. Caption, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the audio caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+performer                   String                                Optional. Performer
+audio_duration              Integer                               Optional. Audio duration in seconds
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the audio
+
 InlineQueryResultVoice
+----------------------
 Represents a link to a voice recording in an .OGG container encoded with OPUS. By default, this voice recording will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the the voice message.
 
-Field	Type	Description
-type	String	Type of the result, must be voice
-id	String	Unique identifier for this result, 1-64 bytes
-voice_url	String	A valid URL for the voice recording
-title	String	Recording title
-caption	String	Optional. Caption, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the voice message caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-voice_duration	Integer	Optional. Recording duration in seconds
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the voice recording
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be voice
+id                          String                                Unique identifier for this result, 1-64 bytes
+voice_url                   String                                A valid URL for the voice recording
+title                       String                                Recording title
+caption                     String                                Optional. Caption, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the voice message caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+voice_duration              Integer                               Optional. Recording duration in seconds
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the voice recording
+
 InlineQueryResultDocument
+-------------------------
 Represents a link to a file. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file. Currently, only .PDF and .ZIP files can be sent using this method.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be document
 id	String	Unique identifier for this result, 1-64 bytes
 title	String	Title for the result
@@ -465,10 +480,13 @@ input_message_content	InputMessageContent	Optional. Content of the message to be
 thumbnail_url	String	Optional. URL of the thumbnail (JPEG only) for the file
 thumbnail_width	Integer	Optional. Thumbnail width
 thumbnail_height	Integer	Optional. Thumbnail height
+
 InlineQueryResultLocation
+-------------------------
 Represents a location on a map. By default, the location will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the location.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be location
 id	String	Unique identifier for this result, 1-64 Bytes
 latitude	Float	Location latitude in degrees
@@ -483,10 +501,13 @@ input_message_content	InputMessageContent	Optional. Content of the message to be
 thumbnail_url	String	Optional. Url of the thumbnail for the result
 thumbnail_width	Integer	Optional. Thumbnail width
 thumbnail_height	Integer	Optional. Thumbnail height
+
 InlineQueryResultVenue
+----------------------
 Represents a venue. By default, the venue will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the venue.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be venue
 id	String	Unique identifier for this result, 1-64 Bytes
 latitude	Float	Latitude of the venue location in degrees
@@ -502,10 +523,13 @@ input_message_content	InputMessageContent	Optional. Content of the message to be
 thumbnail_url	String	Optional. Url of the thumbnail for the result
 thumbnail_width	Integer	Optional. Thumbnail width
 thumbnail_height	Integer	Optional. Thumbnail height
+
 InlineQueryResultContact
+------------------------
 Represents a contact with a phone number. By default, this contact will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the contact.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be contact
 id	String	Unique identifier for this result, 1-64 Bytes
 phone_number	String	Contact's phone number
@@ -517,18 +541,24 @@ input_message_content	InputMessageContent	Optional. Content of the message to be
 thumbnail_url	String	Optional. Url of the thumbnail for the result
 thumbnail_width	Integer	Optional. Thumbnail width
 thumbnail_height	Integer	Optional. Thumbnail height
+
 InlineQueryResultGame
+---------------------
 Represents a Game.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be game
 id	String	Unique identifier for this result, 1-64 bytes
 game_short_name	String	Short name of the game
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
+
 InlineQueryResultCachedPhoto
+----------------------------
 Represents a link to a photo stored on the Telegram servers. By default, this photo will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be photo
 id	String	Unique identifier for this result, 1-64 bytes
 photo_file_id	String	A valid file identifier of the photo
@@ -540,10 +570,13 @@ caption_entities	Array of MessageEntity	Optional. List of special entities that 
 show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the photo
+
 InlineQueryResultCachedGif
+--------------------------
 Represents a link to an animated GIF file stored on the Telegram servers. By default, this animated GIF file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with specified content instead of the animation.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be gif
 id	String	Unique identifier for this result, 1-64 bytes
 gif_file_id	String	A valid file identifier for the GIF file
@@ -554,10 +587,13 @@ caption_entities	Array of MessageEntity	Optional. List of special entities that 
 show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the GIF animation
+
 InlineQueryResultCachedMpeg4Gif
+-------------------------------
 Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) stored on the Telegram servers. By default, this animated MPEG-4 file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be mpeg4_gif
 id	String	Unique identifier for this result, 1-64 bytes
 mpeg4_file_id	String	A valid file identifier for the MPEG4 file
@@ -568,19 +604,25 @@ caption_entities	Array of MessageEntity	Optional. List of special entities that 
 show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video animation
+
 InlineQueryResultCachedSticker
+------------------------------
 Represents a link to a sticker stored on the Telegram servers. By default, this sticker will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the sticker.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be sticker
 id	String	Unique identifier for this result, 1-64 bytes
 sticker_file_id	String	A valid file identifier of the sticker
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the sticker
+
 InlineQueryResultCachedDocument
+-------------------------------
 Represents a link to a file stored on the Telegram servers. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be document
 id	String	Unique identifier for this result, 1-64 bytes
 title	String	Title for the result
@@ -591,10 +633,13 @@ parse_mode	String	Optional. Mode for parsing entities in the document caption. S
 caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the file
+
 InlineQueryResultCachedVideo
+----------------------------
 Represents a link to a video file stored on the Telegram servers. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
 
-Field	Type	Description
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
 type	String	Type of the result, must be video
 id	String	Unique identifier for this result, 1-64 bytes
 video_file_id	String	A valid file identifier for the video file
@@ -606,31 +651,37 @@ caption_entities	Array of MessageEntity	Optional. List of special entities that 
 show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
 reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
 input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video
+
 InlineQueryResultCachedVoice
+----------------------------
 Represents a link to a voice message stored on the Telegram servers. By default, this voice message will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the voice message.
 
-Field	Type	Description
-type	String	Type of the result, must be voice
-id	String	Unique identifier for this result, 1-64 bytes
-voice_file_id	String	A valid file identifier for the voice message
-title	String	Voice message title
-caption	String	Optional. Caption, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the voice message caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the voice message
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be voice
+id                          String                                Unique identifier for this result, 1-64 bytes
+voice_file_id               String                                A valid file identifier for the voice message
+title                       String                                Voice message title
+caption                     String                                Optional. Caption, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the voice message caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the voice message
+
 InlineQueryResultCachedAudio
+----------------------------
 Represents a link to an MP3 audio file stored on the Telegram servers. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
 
-Field	Type	Description
-type	String	Type of the result, must be audio
-id	String	Unique identifier for this result, 1-64 bytes
-audio_file_id	String	A valid file identifier for the audio file
-caption	String	Optional. Caption, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the audio caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the audio
+Field                       Type                                  Description
+-----------------------------------------------------------------------------
+type                        String                                Type of the result, must be audio
+id                          String                                Unique identifier for this result, 1-64 bytes
+audio_file_id               String                                A valid file identifier for the audio file
+caption                     String                                Optional. Caption, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the audio caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the audio
 
 
 
