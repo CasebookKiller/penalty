@@ -1,4 +1,4 @@
-import { type FC, useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 import { retrieveLaunchParams, retrieveRawInitData, type User } from '@telegram-apps/sdk-react';
 
 import { DisplayData, type DisplayDataRow } from '@/components/DisplayData/DisplayData.tsx';
@@ -100,7 +100,7 @@ export const InitDataPage: FC = () => {
 
   if (!initDataRows) {
     return (
-      <>
+      <React.Fragment>
         <div>
           <section className="app placeholder">
             <img
@@ -118,7 +118,7 @@ export const InitDataPage: FC = () => {
             </dl>
           </section>
         </div>
-      </>
+      </React.Fragment>
     );
   }
   

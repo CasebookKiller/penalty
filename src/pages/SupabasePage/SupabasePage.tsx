@@ -6,6 +6,7 @@ import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 import { Panel } from 'primereact/panel';
 import { retrieveLaunchParams } from '@telegram-apps/bridge';
+import React from 'react';
 
 const SBaseContext = createContext(Supabase);
 
@@ -76,7 +77,7 @@ export const SupabasePage: FC = () => {
   }
 
   return (
-    <>
+    <React.Fragment>
       <SBaseContext.Provider value={Supabase}>
         <div className="SupabasePage">
           <Panel
@@ -110,6 +111,6 @@ export const SupabasePage: FC = () => {
           </Panel>
         </div>
       </SBaseContext.Provider>
-    </>
+    </React.Fragment>
   );
 };

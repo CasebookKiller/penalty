@@ -1,19 +1,9 @@
 import {
-  //shareURL,
-  //popup,
-  //mainButton,
   backButton,
-//  useLaunchParams,
-//  miniApp,
-//  themeParams,
-//  viewport,
-//  init,
   retrieveLaunchParams
 } from '@telegram-apps/sdk-react';
 import { type FC,
-//  startTransition,
   useEffect,
-//  useMemo
 } from 'react';
 import {
   HashRouter,
@@ -29,12 +19,11 @@ import { PenaltyPage } from '@/pages/PenaltyPage/PenaltyPage';
 import { GK395Page } from '@/pages/GK395Page/GK395Page';
 import { StartUrlPage } from '@/pages/StartUrlPage/StartUrlPage';
 import { QRUrlPage } from '@/pages/QRUrlPage/QRUrlPage';
+import React from 'react';
 
 function BackButtonManipulator() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  //if (!backButton.isMounted()) backButton.mount();
 
   useEffect(() => {
     function onClick() {
@@ -55,23 +44,42 @@ function BackButtonManipulator() {
       if (backButton.isSupported() && backButton.isMounted()) backButton.show();
     }
 
-    //if (location.pathname === '/' || location.pathname === '/penalty/' ) {
-      //if (!backButton.isMounted()) backButton.mount();
-
-    //  if (backButton.isSupported() && backButton.isMounted()) {
-    //    !backButton.isVisible() && backButton.hide();
-    //  }
-    //} else {
-    //  if (!backButton.isMounted()) backButton.mount();
-
-    //  if (backButton.isSupported() && backButton.isMounted()) {
-    //    !backButton.isVisible() && backButton.show();
-    //  }
-    //}
   }, [location]);
   
   return null;
 }
+
+export const App: FC = () => {
+  const LP = retrieveLaunchParams();
+  const tgWebAppData = LP?.tgWebAppData;
+  const initData = tgWebAppData;
+  const SP = initData?.start_param
+
+  const penalty: AppRoute = { path: '/penalty', element: <PenaltyPage/>, title: 'Расчёт неустойки' };
+  const gk395: AppRoute = { path: '/gk395', element: <GK395Page/>, title: 'Расчёт процентов по ст.395 ГК РФ' };
+  
+  const starturl: AppRoute = { path: '/starturl', element: <StartUrlPage startParam= {SP}/>, title: 'Расчёт по ссылке' };
+  const qrurl: AppRoute = { path: '/qrurl', element: <QRUrlPage/>, title: 'Расчёт по ссылке' };
+
+  routes.push(penalty, gk395, starturl, qrurl);
+
+  return (
+    <React.Fragment>
+      <HashRouter>
+        <BackButtonManipulator/>
+        {/*<MainButtonManipulator/>*/}
+        <Routes>
+          {routes.map((route) => {
+            console.log('Route: ', route);
+            return (<Route key={route.path} {...route} />);
+          })}
+          <Route path='*' element={<Navigate to={'/'}/>}/>
+        </Routes>
+      </HashRouter>
+    </React.Fragment>
+  );
+};
+
 
 /*
 function MainButtonManipulator() {
@@ -136,52 +144,3 @@ function MainButtonManipulator() {
   
 }
 */
-
-export const App: FC = () => {
-  const lp = retrieveLaunchParams();
-  console.log('lp', lp);
-
-  const LP = retrieveLaunchParams();
-  const tgWebAppData = LP?.tgWebAppData;
-  const initData = tgWebAppData;
-  const SP = initData?.start_param
-  
-  //startTransition(() => {
-  //  console.log('%cminiApp: %o', `color: cyan`, miniApp);
-  //});
-
-  useEffect(() => {
-    
-    //if (!themeParams.isMounted()) themeParams.mount();
-    //if (!themeParams.isCssVarsBound()) themeParams.bindCssVars();
-    //if (!viewport.isMounted()) viewport.mount();
-    //if (!backButton.isMounted()) backButton.mount();
-
-  }, []);
-
-  const penalty: AppRoute = { path: '/penalty', element: <PenaltyPage/>, title: 'Расчёт неустойки' };
-  const gk395: AppRoute = { path: '/gk395', element: <GK395Page/>, title: 'Расчёт процентов по ст.395 ГК РФ' };
-  
-  const starturl: AppRoute = { path: '/starturl', element: <StartUrlPage startParam= {SP}/>, title: 'Расчёт по ссылке' };
-  const qrurl: AppRoute = { path: '/qrurl', element: <QRUrlPage/>, title: 'Расчёт по ссылке' };
-  
-
-  routes.push(penalty, gk395, starturl, qrurl);
-
-
-  return (
-    <>
-      <HashRouter>
-        <BackButtonManipulator/>
-        {/*<MainButtonManipulator/>*/}
-        <Routes>
-          {routes.map((route) => {
-            console.log('Route: ', route);
-            return (<Route key={route.path} {...route} />);
-          })}
-          <Route path='*' element={<Navigate to={'/'}/>}/>
-        </Routes>
-      </HashRouter>
-    </>
-  );
-};

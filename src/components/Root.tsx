@@ -1,8 +1,7 @@
 const erudaon = false;
 
-import { type FC, useEffect/*, useMemo */} from 'react';
+import { type FC, useEffect } from 'react';
 import { PrimeReactProvider } from 'primereact/api';
-//import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { retrieveLaunchParams } from '@telegram-apps/bridge';
 
 import { App } from '@/components/App';

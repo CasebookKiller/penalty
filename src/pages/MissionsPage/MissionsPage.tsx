@@ -37,8 +37,8 @@ export const MissionsPage: FC = () => {
 
   //const refs = useRef<AntButtonRef[]>([]);
   
-  const DefaultMarker = <div className="p-timeline-event-marker" data-pc-section="marker"/>;
-  const DisabledMarker = <div className="p-timeline-event-marker-disabled" data-pc-section="marker"/>;
+  const DefaultMarker = <div className='p-timeline-event-marker' data-pc-section='marker'/>;
+  const DisabledMarker = <div className='p-timeline-event-marker-disabled' data-pc-section='marker'/>;
 
   const [missions, setMissions] = useState<Mission[]>([
     {
