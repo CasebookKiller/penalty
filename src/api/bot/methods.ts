@@ -559,17 +559,17 @@ Represents a link to a photo stored on the Telegram servers. By default, this ph
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be photo
-id	String	Unique identifier for this result, 1-64 bytes
-photo_file_id	String	A valid file identifier of the photo
-title	String	Optional. Title for the result
-description	String	Optional. Short description of the result
-caption	String	Optional. Caption of the photo to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the photo caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the photo
+type                        String                                Type of the result, must be photo
+id                          String                                Unique identifier for this result, 1-64 bytes
+photo_file_id               String                                A valid file identifier of the photo
+title                       String                                Optional. Title for the result
+description                 String                                Optional. Short description of the result
+caption                     String                                Optional. Caption of the photo to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the photo caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the photo
 
 InlineQueryResultCachedGif
 --------------------------
@@ -577,16 +577,16 @@ Represents a link to an animated GIF file stored on the Telegram servers. By def
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be gif
-id	String	Unique identifier for this result, 1-64 bytes
-gif_file_id	String	A valid file identifier for the GIF file
-title	String	Optional. Title for the result
-caption	String	Optional. Caption of the GIF file to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the GIF animation
+type                        String                                Type of the result, must be gif
+id                          String                                Unique identifier for this result, 1-64 bytes
+gif_file_id                 String                                A valid file identifier for the GIF file
+title                       String                                Optional. Title for the result
+caption                     String                                Optional. Caption of the GIF file to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the GIF animation
 
 InlineQueryResultCachedMpeg4Gif
 -------------------------------
@@ -594,16 +594,16 @@ Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) st
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be mpeg4_gif
-id	String	Unique identifier for this result, 1-64 bytes
-mpeg4_file_id	String	A valid file identifier for the MPEG4 file
-title	String	Optional. Title for the result
-caption	String	Optional. Caption of the MPEG-4 file to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video animation
+type                        String                                Type of the result, must be mpeg4_gif
+id                          String                                Unique identifier for this result, 1-64 bytes
+mpeg4_file_id               String                                A valid file identifier for the MPEG4 file
+title                       String                                Optional. Title for the result
+caption                     String                                Optional. Caption of the MPEG-4 file to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the video animation
 
 InlineQueryResultCachedSticker
 ------------------------------
@@ -611,11 +611,11 @@ Represents a link to a sticker stored on the Telegram servers. By default, this 
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be sticker
-id	String	Unique identifier for this result, 1-64 bytes
-sticker_file_id	String	A valid file identifier of the sticker
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the sticker
+type                        String                                Type of the result, must be sticker
+id                          String                                Unique identifier for this result, 1-64 bytes
+sticker_file_id             String                                A valid file identifier of the sticker
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the sticker
 
 InlineQueryResultCachedDocument
 -------------------------------
