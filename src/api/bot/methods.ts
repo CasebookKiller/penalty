@@ -466,20 +466,20 @@ Represents a link to a file. By default, this file will be sent by the user with
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be document
-id	String	Unique identifier for this result, 1-64 bytes
-title	String	Title for the result
-caption	String	Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the document caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-document_url	String	A valid URL for the file
-mime_type	String	MIME type of the content of the file, either “application/pdf” or “application/zip”
-description	String	Optional. Short description of the result
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the file
-thumbnail_url	String	Optional. URL of the thumbnail (JPEG only) for the file
-thumbnail_width	Integer	Optional. Thumbnail width
-thumbnail_height	Integer	Optional. Thumbnail height
+type                        String                                Type of the result, must be document
+id                          String                                Unique identifier for this result, 1-64 bytes
+title                       String                                Title for the result
+caption                     String                                Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the document caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+document_url                String                                A valid URL for the file
+mime_type                   String                                MIME type of the content of the file, either “application/pdf” or “application/zip”
+description                 String                                Optional. Short description of the result
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the file
+thumbnail_url               String                                Optional. URL of the thumbnail (JPEG only) for the file
+thumbnail_width             Integer                               Optional. Thumbnail width
+thumbnail_height            Integer                               Optional. Thumbnail height
 
 InlineQueryResultLocation
 -------------------------
@@ -487,20 +487,20 @@ Represents a location on a map. By default, the location will be sent by the use
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be location
-id	String	Unique identifier for this result, 1-64 Bytes
-latitude	Float	Location latitude in degrees
-longitude	Float	Location longitude in degrees
-title	String	Location title
-horizontal_accuracy	Float	Optional. The radius of uncertainty for the location, measured in meters; 0-1500
-live_period	Integer	Optional. Period in seconds during which the location can be updated, should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely.
-heading	Integer	Optional. For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
-proximity_alert_radius	Integer	Optional. For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the location
-thumbnail_url	String	Optional. Url of the thumbnail for the result
-thumbnail_width	Integer	Optional. Thumbnail width
-thumbnail_height	Integer	Optional. Thumbnail height
+type                        String                                Type of the result, must be location
+id                          String                                Unique identifier for this result, 1-64 Bytes
+latitude                    Float                                 Location latitude in degrees
+longitude                   Float                                 Location longitude in degrees
+title                       String                                Location title
+horizontal_accuracy         Float                                 Optional. The radius of uncertainty for the location, measured in meters; 0-1500
+live_period                 Integer                               Optional. Period in seconds during which the location can be updated, should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely.
+heading                     Integer                               Optional. For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
+proximity_alert_radius      Integer                               Optional. For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the location
+thumbnail_url               String                                Optional. Url of the thumbnail for the result
+thumbnail_width             Integer                               Optional. Thumbnail width
+thumbnail_height            Integer                               Optional. Thumbnail height
 
 InlineQueryResultVenue
 ----------------------
@@ -508,21 +508,21 @@ Represents a venue. By default, the venue will be sent by the user. Alternativel
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be venue
-id	String	Unique identifier for this result, 1-64 Bytes
-latitude	Float	Latitude of the venue location in degrees
-longitude	Float	Longitude of the venue location in degrees
-title	String	Title of the venue
-address	String	Address of the venue
-foursquare_id	String	Optional. Foursquare identifier of the venue if known
-foursquare_type	String	Optional. Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)
-google_place_id	String	Optional. Google Places identifier of the venue
-google_place_type	String	Optional. Google Places type of the venue. (See supported types.)
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the venue
-thumbnail_url	String	Optional. Url of the thumbnail for the result
-thumbnail_width	Integer	Optional. Thumbnail width
-thumbnail_height	Integer	Optional. Thumbnail height
+type                        String                                Type of the result, must be venue
+id                          String                                Unique identifier for this result, 1-64 Bytes
+latitude                    Float                                 Latitude of the venue location in degrees
+longitude                   Float                                 Longitude of the venue location in degrees
+title                       String                                Title of the venue
+address                     String                                Address of the venue
+foursquare_id               String                                Optional. Foursquare identifier of the venue if known
+foursquare_type             String                                Optional. Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)
+google_place_id             String                                Optional. Google Places identifier of the venue
+google_place_type           String                                Optional. Google Places type of the venue. (See supported types.)
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the venue
+thumbnail_url               String                                Optional. Url of the thumbnail for the result
+thumbnail_width             Integer                               Optional. Thumbnail width
+thumbnail_height            Integer                               Optional. Thumbnail height
 
 InlineQueryResultContact
 ------------------------
@@ -530,17 +530,17 @@ Represents a contact with a phone number. By default, this contact will be sent 
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be contact
-id	String	Unique identifier for this result, 1-64 Bytes
-phone_number	String	Contact's phone number
-first_name	String	Contact's first name
-last_name	String	Optional. Contact's last name
-vcard	String	Optional. Additional data about the contact in the form of a vCard, 0-2048 bytes
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the contact
-thumbnail_url	String	Optional. Url of the thumbnail for the result
-thumbnail_width	Integer	Optional. Thumbnail width
-thumbnail_height	Integer	Optional. Thumbnail height
+type                        String                                Type of the result, must be contact
+id                          String                                Unique identifier for this result, 1-64 Bytes
+phone_number                String                                Contact's phone number
+first_name                  String                                Contact's first name
+last_name                   String                                Optional. Contact's last name
+vcard                       String                                Optional. Additional data about the contact in the form of a vCard, 0-2048 bytes
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the contact
+thumbnail_url               String                                Optional. Url of the thumbnail for the result
+thumbnail_width             Integer                               Optional. Thumbnail width
+thumbnail_height            Integer                               Optional. Thumbnail height
 
 InlineQueryResultGame
 ---------------------
@@ -548,10 +548,10 @@ Represents a Game.
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be game
-id	String	Unique identifier for this result, 1-64 bytes
-game_short_name	String	Short name of the game
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
+type                        String                                Type of the result, must be game
+id                          String                                Unique identifier for this result, 1-64 bytes
+game_short_name             String                                Short name of the game
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
 
 InlineQueryResultCachedPhoto
 ----------------------------
@@ -623,16 +623,16 @@ Represents a link to a file stored on the Telegram servers. By default, this fil
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be document
-id	String	Unique identifier for this result, 1-64 bytes
-title	String	Title for the result
-document_file_id	String	A valid file identifier for the file
-description	String	Optional. Short description of the result
-caption	String	Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the document caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the file
+type                        String                                Type of the result, must be document
+id                          String                                Unique identifier for this result, 1-64 bytes
+title                       String                                Title for the result
+document_file_id            String                                A valid file identifier for the file
+description                 String                                Optional. Short description of the result
+caption                     String                                Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the document caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the file
 
 InlineQueryResultCachedVideo
 ----------------------------
@@ -640,17 +640,17 @@ Represents a link to a video file stored on the Telegram servers. By default, th
 
 Field                       Type                                  Description
 -----------------------------------------------------------------------------
-type	String	Type of the result, must be video
-id	String	Unique identifier for this result, 1-64 bytes
-video_file_id	String	A valid file identifier for the video file
-title	String	Title for the result
-description	String	Optional. Short description of the result
-caption	String	Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
-parse_mode	String	Optional. Mode for parsing entities in the video caption. See formatting options for more details.
-caption_entities	Array of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
-show_caption_above_media	Boolean	Optional. Pass True, if the caption must be shown above the message media
-reply_markup	InlineKeyboardMarkup	Optional. Inline keyboard attached to the message
-input_message_content	InputMessageContent	Optional. Content of the message to be sent instead of the video
+type                        String                                Type of the result, must be video
+id                          String                                Unique identifier for this result, 1-64 bytes
+video_file_id               String                                A valid file identifier for the video file
+title                       String                                Title for the result
+description                 String                                Optional. Short description of the result
+caption                     String                                Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
+parse_mode                  String                                Optional. Mode for parsing entities in the video caption. See formatting options for more details.
+caption_entities            Array of MessageEntity                Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+show_caption_above_media    Boolean                               Optional. Pass True, if the caption must be shown above the message media
+reply_markup                InlineKeyboardMarkup                  Optional. Inline keyboard attached to the message
+input_message_content       InputMessageContent                   Optional. Content of the message to be sent instead of the video
 
 InlineQueryResultCachedVoice
 ----------------------------
